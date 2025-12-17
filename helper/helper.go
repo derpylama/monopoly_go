@@ -10,3 +10,11 @@ func Clamp(value, min, max int) int {
 
 	return value
 }
+
+func SumOfList(list []int) int {
+	sum := 0
+	for _, n := range list {
+		sum += n
+	}
+	return sum
+}

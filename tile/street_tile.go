@@ -9,9 +9,10 @@ type Street struct {
 	PropertyTile
 	housePrice            int
 	houses                int
-	priceIncreasePerHouse int
+	priceIncreasePerHouse []int
 	color                 string
 	hotelOwned            bool
+	hotelRent             int
 }
 
 func (street *Street) GetName() string {
@@ -30,19 +31,23 @@ func (street *Street) GetPrice() int {
 	return street.buyPrice
 }
 
-func (street *Street) GetRent(tiles []Tile) int {
+func (street *Street) GetRent(tiles []Tile, rolledDice []int) int {
 	var rent = street.rent
 
 	if street.GetHouseAmount() > 0 {
-		return rent + street.priceIncreasePerHouse*street.GetHouseAmount()
+		return street.priceIncreasePerHouse[street.GetHouseAmount()-1]
 	} else {
 		return rent
 	}
 }
 
-func NewStreetTile(buyPrice int, housePrice int, priceIncreasePerHouse int, color string, rent int, mortgageValue int) Property {
+func NewStreetTile(buyPrice int, housePrice int, priceIncreasePerHouse []int, color string, rent int, mortgageValue int, hotelRent int, name string, position int) Property {
 	return &Street{
 		PropertyTile: PropertyTile{
+			BaseTile: BaseTile{
+				Name:     name,
+				Position: position,
+			},
 			buyPrice:      buyPrice,
 			rent:          rent,
 			ownedBy:       nil,
@@ -54,10 +59,11 @@ func NewStreetTile(buyPrice int, housePrice int, priceIncreasePerHouse int, colo
 		priceIncreasePerHouse: priceIncreasePerHouse,
 		color:                 color,
 		hotelOwned:            false,
+		hotelRent:             hotelRent,
 	}
 }
 
-func (street *Street) SetHouseAmount(amount int) {
+func (street *Street) setHouseAmount(amount int) {
 	street.houses = helper.Clamp(amount, 0, 4)
 }
 
@@ -69,22 +75,22 @@ func (street *Street) buyHouse() {
 	var curHouseAmount = street.GetHouseAmount()
 	var newHouseAmount = curHouseAmount + 1
 
-	street.SetHouseAmount(newHouseAmount)
+	street.setHouseAmount(newHouseAmount)
 }
 
 func (street *Street) sellHouse() {
 	var curHouseAmount = street.GetHouseAmount()
 	var newHouseAmount = curHouseAmount - 1
 
-	street.SetHouseAmount(newHouseAmount)
+	street.setHouseAmount(newHouseAmount)
 }
 
 func (street *Street) buyHotel() {
 	street.hotelOwned = true
-	street.SetHouseAmount(0)
+	street.setHouseAmount(0)
 }
 
 func (street *Street) sellHotel() {
 	street.hotelOwned = false
-	street.SetHouseAmount(4)
+	street.setHouseAmount(4)
 }

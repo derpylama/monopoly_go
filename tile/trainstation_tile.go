@@ -4,10 +4,10 @@ import "monopoly/player"
 
 type TrainStation struct {
 	PropertyTile
-	rentPerStation [4]int
+	rentPerStation int
 }
 
-func NewTrainStation(buyPrice int, mortgageValue int, name string, position int, rentPerStation [4]int) Property {
+func NewTrainStation(buyPrice int, mortgageValue int, name string, position int, rentPerStation int) Property {
 	return &TrainStation{
 		PropertyTile: PropertyTile{
 			BaseTile: BaseTile{
@@ -37,7 +37,7 @@ func (trainStation *TrainStation) GetPrice() int {
 	return trainStation.buyPrice
 }
 
-func (trainStation *TrainStation) GetRent(tiles []Tile) int {
+func (trainStation *TrainStation) GetRent(tiles []Tile, rolledDice []int) int {
 
 	count := 0
 
@@ -49,5 +49,5 @@ func (trainStation *TrainStation) GetRent(tiles []Tile) int {
 		}
 	}
 
-	return trainStation.rentPerStation[count]
+	return trainStation.rentPerStation * count
 }

@@ -1,18 +1,19 @@
 package main
 
 import (
-	"fmt"
-	board "monopoly/board"
+	"monopoly/board"
+	"monopoly/dice"
+	"monopoly/game"
+	"monopoly/player"
 )
 
 func main() {
-	fmt.Println("t")
-	//fmt.Scan(&test)
 
-	//fmt.Println(test)
+	players := []*player.Player{player.NewPlayer(1500, "janne")}
 	board := board.NewBoard()
+	dice := dice.NewDice(2, 6)
 
-	for _, element := range board.Tiles() {
-		fmt.Print(element.GetName() + " \n")
-	}
+	game := game.NewGame(players, board, dice)
+
+	game.StartGame()
 }

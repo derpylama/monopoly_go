@@ -16,7 +16,7 @@ type PropertyTile struct {
 type Property interface {
 	Tile
 	GetPrice() int
-	GetRent(tiles []Tile) int
+	GetRent(tiles []Tile, rolledDice []int) int
 }
 
 func (tile *PropertyTile) Mortgage() int {

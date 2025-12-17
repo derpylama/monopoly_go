@@ -4,10 +4,31 @@ import (
 	"monopoly/player"
 )
 
-type goToJail struct {
-	tile Tile
+type GoToJail struct {
+	BaseTile
 }
 
-func (jail *goToJail) setPlayerToJail(player *player.Player) {
+func (jail *GoToJail) setPlayerToJail(player *player.Player) {
+
+}
+
+func NewGoToJailTile(name string, position int) Tile {
+	return &GoToJail{
+		BaseTile: BaseTile{
+			Name:     name,
+			Position: position,
+		},
+	}
+}
+
+func (jail *GoToJail) GetName() string {
+	return jail.Name
+}
+
+func (jail *GoToJail) GetPosition() int {
+	return jail.Position
+}
+
+func (jail *GoToJail) OnLand(*player.Player) {
 
 }

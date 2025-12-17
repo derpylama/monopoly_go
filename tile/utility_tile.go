@@ -14,7 +14,7 @@ func NewUtilityTile(buyPrice int, name string, mortgageValue int, baseMultiplier
 			buyPrice:      buyPrice,
 			mortgageValue: mortgageValue,
 			BaseTile: BaseTile{
-				Name: name,
+				Name:     name,
 				Position: position,
 			},
 		},
@@ -39,11 +39,11 @@ func (utility *Utility) GetPrice() int {
 	return utility.buyPrice
 }
 
-func (utility *Utility) GetRent(rolledDice []int, tiles []Tile) int {
-	
+func (utility *Utility) GetRent(tiles []Tile, rolledDice []int) int {
+
 	var diceTotal int
 
-	for _, dice := rolledDice {
+	for _, dice := range rolledDice {
 		diceTotal += dice
 	}
 
