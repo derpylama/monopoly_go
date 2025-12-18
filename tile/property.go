@@ -19,6 +19,7 @@ type Property interface {
 	GetRent(tiles []Tile, rolledDice []int) int
 	GetOwner() *player.Player
 	SetOwner(*player.Player)
+	IsOwned() bool
 }
 
 func (tile *PropertyTile) Mortgage() int {

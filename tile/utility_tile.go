@@ -8,7 +8,7 @@ type Utility struct {
 	monopolyMultiplier int
 }
 
-func NewUtilityTile(buyPrice int, name string, mortgageValue int, baseMultiplier int, monopolyMultiplier int, position int) Property {
+func NewUtilityTile(buyPrice int, name string, mortgageValue int, baseMultiplier int, monopolyMultiplier int, position int) Tile {
 	return &Utility{
 		PropertyTile: PropertyTile{
 			buyPrice:      buyPrice,
@@ -37,6 +37,14 @@ func (utility *Utility) OnLand(player *player.Player) {
 
 func (utility *Utility) GetPrice() int {
 	return utility.buyPrice
+}
+
+func (utility *Utility) IsOwned() bool {
+	if utility.ownedBy == nil {
+		return false
+	} else {
+		return true
+	}
 }
 
 func (utility *Utility) GetRent(tiles []Tile, rolledDice []int) int {

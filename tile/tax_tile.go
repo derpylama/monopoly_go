@@ -4,11 +4,11 @@ import "monopoly/player"
 
 type TaxTile struct {
 	BaseTile
-	TaxAmount int
+	taxAmount int
 }
 
 func (taxTile *TaxTile) getTax() int {
-	return taxTile.TaxAmount
+	return taxTile.taxAmount
 }
 
 func NewTaxTile(position int, taxAmount int, name string) Tile {
@@ -17,7 +17,7 @@ func NewTaxTile(position int, taxAmount int, name string) Tile {
 			Position: position,
 			Name:     name,
 		},
-		TaxAmount: taxAmount,
+		taxAmount: taxAmount,
 	}
 }
 
@@ -26,9 +26,17 @@ func (taxTile *TaxTile) GetName() string {
 }
 
 func (taxTile *TaxTile) OnLand(player *player.Player) {
+	playerMoney := player.GetMoney()
+	playerMoney -= taxTile.getTax()
+
+	player.SetMoney(playerMoney)
 
 }
 
 func (taxTile *TaxTile) GetPosition() int {
 	return taxTile.Position
+}
+
+func (taxTile *TaxTile) GetTaxAmount() int {
+	return taxTile.taxAmount
 }

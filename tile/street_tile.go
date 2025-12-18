@@ -49,7 +49,15 @@ func (street *Street) SetOwner(player *player.Player) {
 	street.ownedBy = player
 }
 
-func NewStreetTile(buyPrice int, housePrice int, priceIncreasePerHouse []int, color string, rent int, mortgageValue int, hotelRent int, name string, position int) Property {
+func (street *Street) IsOwned() bool {
+	if street.ownedBy == nil {
+		return false
+	} else {
+		return true
+	}
+}
+
+func NewStreetTile(buyPrice int, housePrice int, priceIncreasePerHouse []int, color string, rent int, mortgageValue int, hotelRent int, name string, position int) Tile {
 	return &Street{
 		PropertyTile: PropertyTile{
 			BaseTile: BaseTile{

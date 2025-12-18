@@ -7,7 +7,7 @@ type TrainStation struct {
 	rentPerStation int
 }
 
-func NewTrainStation(buyPrice int, mortgageValue int, name string, position int, rentPerStation int) Property {
+func NewTrainStation(buyPrice int, mortgageValue int, name string, position int, rentPerStation int) Tile {
 	return &TrainStation{
 		PropertyTile: PropertyTile{
 			BaseTile: BaseTile{
@@ -18,6 +18,14 @@ func NewTrainStation(buyPrice int, mortgageValue int, name string, position int,
 			mortgageValue: mortgageValue,
 		},
 		rentPerStation: rentPerStation,
+	}
+}
+
+func (trainStation *TrainStation) IsOwned() bool {
+	if trainStation.ownedBy == nil {
+		return false
+	} else {
+		return true
 	}
 }
 

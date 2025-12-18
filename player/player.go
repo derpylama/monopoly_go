@@ -2,6 +2,7 @@ package player
 
 import (
 	cards "monopoly/card"
+	"monopoly/helper"
 )
 
 type Player struct {
@@ -32,6 +33,10 @@ func (player Player) GetJailStatus() bool {
 	return player.isJailed
 }
 
+func (player *Player) SetMoney(money int) {
+	player.money = helper.Clamp(money, 0, 100000000)
+}
+
 func (player *Player) Move(rolledDice []int) {
 	curPos := player.GetPosition()
 
@@ -46,9 +51,10 @@ func (player *Player) Move(rolledDice []int) {
 	player.position = newPos
 }
 
-func (player *Player) BuyProperty(cost int) bool {
+func (player *Player) Pay(cost int) bool {
 	if player.GetMoney() >= cost {
-
+		player.SetMoney(player.GetMoney() - cost)
+		return true
 	}
 
 	return false
