@@ -63,3 +63,11 @@ func (utility *Utility) GetRent(tiles []Tile, rolledDice []int) int {
 		return diceTotal * utility.baseMultiplier
 	}
 }
+
+func (utility *Utility) GetOwner() *player.Player {
+	return utility.ownedBy
+}
+
+func (utility *Utility) SetOwner(player *player.Player) {
+	utility.ownedBy = player
+}

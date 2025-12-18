@@ -51,3 +51,11 @@ func (trainStation *TrainStation) GetRent(tiles []Tile, rolledDice []int) int {
 
 	return trainStation.rentPerStation * count
 }
+
+func (trainStation *TrainStation) GetOwner() *player.Player {
+	return trainStation.ownedBy
+}
+
+func (trainStation *TrainStation) SetOwner(player *player.Player) {
+	trainStation.ownedBy = player
+}

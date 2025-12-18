@@ -1,12 +1,17 @@
 package game
 
 import (
+	"bufio"
 	"fmt"
 	"monopoly/board"
 	"monopoly/dice"
 	"monopoly/helper"
 	"monopoly/player"
+	"monopoly/tile"
+
+	"os"
 	"strconv"
+	"strings"
 )
 
 type Game struct {
@@ -41,21 +46,31 @@ func (game *Game) EndGame() {
 
 func (game *Game) takeTurn() {
 	currentPlayer := game.players[game.currentPlayer]
+	var reader = bufio.NewReader(os.Stdin)
 
-	var input string
-
-	fmt.Println("Enter r to roll dice: \nEnter a to ")
-	fmt.Scanln(&input)
-	ClearScreen()
+	fmt.Print(currentPlayer.GetName() + " turn")
+	fmt.Print("\nEnter r to roll dice: \n\n")
+	input, _ := reader.ReadString('\n')
+	input = strings.TrimSpace(input)
 
 	switch input {
 	case "r":
 		roll := game.dice.ThrowDice()
-		fmt.Println("Player " + currentPlayer.GetName() + " rolled " + strconv.Itoa(helper.SumOfList(roll)))
+		fmt.Println("Player " + currentPlayer.GetName() + " rolled a " + strconv.Itoa(helper.SumOfList(roll)))
 		currentPlayer.Move(roll)
-		tile := game.board.GetTile(currentPlayer.GetPosition())
+		landedOnTile := game.board.GetTile(currentPlayer.GetPosition())
 
-		fmt.Println(currentPlayer.GetName() + " is now on " + tile.GetName())
+		fmt.Println(currentPlayer.GetName() + " is now on " + landedOnTile.GetName() + ". Position " + strconv.Itoa(currentPlayer.GetPosition()))
+
+		switch v := landedOnTile.(type) {
+		case *tile.Street:
+			if v.GetOwner() != nil {
+				fmt.Println("The Property is owned by " + v.GetOwner().GetName())
+			} else {
+				fmt.Print("Property is not owned\n")
+				fmt.Print("Price: " + strconv.Itoa(v.GetPrice()) + "\n")
+			}
+		}
 
 	case "a":
 
@@ -63,6 +78,10 @@ func (game *Game) takeTurn() {
 		fmt.Println("Invalid Key press")
 	}
 
+	fmt.Println("Press enter to continue to next turn")
+	reader.ReadString('\n')
+
+	ClearScreen()
 }
 
 func (game *Game) nextPlayer() {
@@ -83,3 +102,5 @@ func (game *Game) getCurrentPlayerIndex() int {
 func ClearScreen() {
 	fmt.Print("\033[H\033[2J")
 }
+
+func 

@@ -41,6 +41,14 @@ func (street *Street) GetRent(tiles []Tile, rolledDice []int) int {
 	}
 }
 
+func (street *Street) GetOwner() *player.Player {
+	return street.ownedBy
+}
+
+func (street *Street) SetOwner(player *player.Player) {
+	street.ownedBy = player
+}
+
 func NewStreetTile(buyPrice int, housePrice int, priceIncreasePerHouse []int, color string, rent int, mortgageValue int, hotelRent int, name string, position int) Property {
 	return &Street{
 		PropertyTile: PropertyTile{

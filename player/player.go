@@ -46,6 +46,14 @@ func (player *Player) Move(rolledDice []int) {
 	player.position = newPos
 }
 
+func (player *Player) BuyProperty(cost int) bool {
+	if player.GetMoney() >= cost {
+
+	}
+
+	return false
+}
+
 func NewPlayer(money int, name string) *Player {
 	return &Player{
 		position:    0,

@@ -9,7 +9,7 @@ import (
 
 func main() {
 
-	players := []*player.Player{player.NewPlayer(1500, "janne")}
+	players := []*player.Player{player.NewPlayer(1500, "player1"), player.NewPlayer(1500, "player2")}
 	board := board.NewBoard()
 	dice := dice.NewDice(2, 6)
 
