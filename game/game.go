@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"monopoly/board"
 	"monopoly/dice"
-	"monopoly/helper"
+	"monopoly/logger"
 	"monopoly/player"
 	"monopoly/tile"
 
@@ -56,41 +56,59 @@ func (game *Game) takeTurn() {
 	switch input {
 	case "r":
 		roll := game.dice.ThrowDice()
-		fmt.Println("Player " + currentPlayer.GetName() + " rolled a " + strconv.Itoa(helper.SumOfList(roll)))
-		fmt.Print("\nCurrent money: " + strconv.Itoa(currentPlayer.GetMoney()) + "\n")
+		// fmt.Println("Player " + currentPlayer.GetName() + " rolled a " + strconv.Itoa(helper.SumOfList(roll)))
+		// fmt.Print("\nCurrent money: " + strconv.Itoa(currentPlayer.GetMoney()) + "\n")
+
+		logger.LogRollDice(currentPlayer.GetName(), roll, currentPlayer.GetMoney())
+
 		currentPlayer.Move(roll)
 		landedOnTile := game.board.GetTile(currentPlayer.GetPosition())
 
 		allTiles := game.board.Tiles()
 
-		fmt.Println(currentPlayer.GetName() + " is now on " + landedOnTile.GetName() + ". Position " + strconv.Itoa(currentPlayer.GetPosition()))
+		// fmt.Println(currentPlayer.GetName() + " is now on " + landedOnTile.GetName() + ". Position " + strconv.Itoa(currentPlayer.GetPosition()))
+		//logger.LogOnLand("", landedOnTile.GetName(), false, 0, currentPlayer.GetName(), landedOnTile)
 
 		switch v := landedOnTile.(type) {
 		case *tile.Street:
-			if v.IsOwned() {
-				//If the property is owned then get the rent and pay it
-				fmt.Print("The Property is owned by " + v.GetOwner().GetName())
-				fmt.Print("\nYou must pay " + strconv.Itoa(v.GetRent(allTiles, roll)) + "\n")
 
-				fmt.Print("\nYour new balance is " + strconv.Itoa(currentPlayer.GetMoney()))
+			if v.IsOwned() {
+
+				//If the property is owned then get the rent and pay it
+
+				logger.LogOnLand(v.GetOwner().GetName(), v.GetName(), true, v.GetRent(allTiles, roll), currentPlayer.GetName(), v)
+				playerPaysRent(currentPlayer, v.GetRent(allTiles, roll), v.GetOwner())
 			} else {
 
 				//If the property is not owned get the price of it
-				fmt.Print("Property is not owned\n")
-				fmt.Print("Price: " + strconv.Itoa(v.GetPrice()) + "\n")
+				logger.LogOnLand("", v.GetName(), false, 0, currentPlayer.GetName(), v)
 
-				if prop, ok := landedOnTile.(tile.Property); ok {
-					playerBuysProperty(currentPlayer, prop)
+				// Ask the player if they want to buy the property
+				fmt.Print("Do you want to buy " + v.GetName() + " for " + strconv.Itoa(v.GetPrice()) + "? (y/n): ")
+				buyInput, _ := reader.ReadString('\n')
+				buyInput = strings.TrimSpace(buyInput)
+
+				if buyInput == "y" {
+					//previousMoney := currentPlayer.GetMoney()
+					playerBuysProperty(currentPlayer, v)
+					remainingMoney := currentPlayer.GetMoney()
+
+					logger.LogBuyProperty(currentPlayer.GetName(), v.GetName(), v.GetPrice(), remainingMoney)
+
+					// fmt.Print(currentPlayer.GetName() + " bought " + v.GetName() + " for " + strconv.Itoa(v.GetPrice()) + ". Remaining money: " + strconv.Itoa(remainingMoney) + "\n")
+				} else {
+					fmt.Print("You chose not to buy the property.\n")
 				}
-				fmt.Print("\nYou bought this property. You now have " + strconv.Itoa(currentPlayer.GetMoney()) + " money\n")
 			}
 
 		case *tile.TrainStation:
 			if v.IsOwned() {
-				fmt.Print("The Property is owned by " + v.GetOwner().GetName())
-				fmt.Print("\nYou must pay " + strconv.Itoa(v.GetRent(allTiles, roll)) + "\n")
+				// fmt.Print("The Property is owned by " + v.GetOwner().GetName())
+				// fmt.Print("\nYou must pay " + strconv.Itoa(v.GetRent(allTiles, roll)) + "\n")
 
-				fmt.Print("\nYour new balance is " + strconv.Itoa(currentPlayer.GetMoney()))
+				// fmt.Print("\nYour new balance is " + strconv.Itoa(currentPlayer.GetMoney()))
+
+				logger.LogOnLand(v.GetOwner().GetName(), v.GetName(), true, v.GetRent(allTiles, roll), currentPlayer.GetName(), v)
 			}
 
 		case *tile.TaxTile:
@@ -138,5 +156,13 @@ func playerBuysProperty(player *player.Player, tile tile.Property) {
 		tile.SetOwner(player)
 	} else {
 		fmt.Print("\nYou can't afford this property")
+	}
+}
+
+func playerPaysRent(player *player.Player, amount int, owner *player.Player) {
+	if player.Pay(amount) {
+		owner.SetMoney(owner.GetMoney() + amount)
+	} else {
+		fmt.Print("\nYou can't afford to pay the rent")
 	}
 }
