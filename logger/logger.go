@@ -33,11 +33,18 @@ func LogOnLand(ownerName string, tileName string, isOwned bool, amountToPay int,
 
 	case *tile.GoToJail:
 		println(currentPlayerName + " landed on Go To Jail Tile and is sent to Jail")
+
+	case *tile.JailTile:
+		println(currentPlayerName + " is just visiting Jail")
+
+	default:
+		println(currentPlayerName + " landed on " + tileName)
 	}
 
 }
 
 func LogRollDice(playerName string, roll []int, currentMoney int) {
+	ClearScreen()
 
 	println(playerName + " rolled a " + strconv.Itoa(roll[0]) + " and a " + strconv.Itoa(roll[1]) + " for a total of " + strconv.Itoa(roll[0]+roll[1]))
 	println("Current money: " + strconv.Itoa(currentMoney))
@@ -49,4 +56,16 @@ func LogBuyProperty(playerName string, propertyName string, propertyPrice int, r
 
 func ClearScreen() {
 	fmt.Print("\033[H\033[2J")
+}
+
+func LogPlayersProperties(playerName string, ownedProperties []tile.Property) {
+	println(playerName + "'s Properties:")
+
+	count := 0
+
+	for _, t := range ownedProperties {
+
+		fmt.Println("\n" + strconv.Itoa(count) + " - " + t.GetName() + " | Price: " + strconv.Itoa(t.GetPrice()) + " | Rent: " + strconv.Itoa(t.GetRent(nil, nil)))
+		count++
+	}
 }
