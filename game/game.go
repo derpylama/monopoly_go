@@ -180,7 +180,7 @@ func playerPaysRent(player *player.Player, amount int, owner *player.Player) {
 func playerInputs(player *player.Player, tiles []tile.Tile) {
 	// checks what input the player gives
 
-	fmt.Println("Press 'a' to view all your properties or any other key to continue:")
+	fmt.Println("Press 'a' to view all your properties or b to buy a house any other key to continue:")
 
 	var inputReader = bufio.NewReader(os.Stdin)
 	input, _ := inputReader.ReadString('\n')
@@ -192,11 +192,42 @@ func playerInputs(player *player.Player, tiles []tile.Tile) {
 
 	case "b":
 		// buy houses or hotels
+		logger.LogPlayersProperties(player.GetName(), GetPlayersProperties(player, tiles))
 
-	default:
-		return
+		fmt.Println("Enter the numbet of the property that you want to build a house on")
+		houseInput, _ := inputReader.ReadString('\n')
+		houseInput = strings.TrimSpace(houseInput)
+		houseIndex, err := strconv.Atoi(houseInput)
+
+		if err != nil {
+			fmt.Println("Invalid input")
+			return
+		}
+
+		properties := GetPlayersProperties(player, tiles)
+		if houseIndex < 0 || houseIndex >= len(properties) {
+			fmt.Println("Invalid property index")
+			return
+		}
+
+		selectedProperty := properties[houseIndex]
+
+		switch v := selectedProperty.(type) {
+		case *tile.Street:
+			v.BuyHouse()
+			if err != nil {
+				fmt.Println(err.Error())
+				return
+			}
+			player.Pay(v.GetHousePrice())
+			fmt.Println("Built a house on " + v.GetName())
+			playerInputs(player, tiles)
+		default:
+			playerInputs(player, tiles)
+			return
+		}
+
 	}
-
 }
 
 func GetPlayersProperties(player *player.Player, tiles []tile.Tile) []tile.Property {

@@ -59,13 +59,14 @@ func ClearScreen() {
 }
 
 func LogPlayersProperties(playerName string, ownedProperties []tile.Property) {
+	ClearScreen()
 	println(playerName + "'s Properties:")
 
 	count := 0
 
 	for _, t := range ownedProperties {
 
-		fmt.Println("\n" + strconv.Itoa(count) + " - " + t.GetName() + " | Price: " + strconv.Itoa(t.GetPrice()) + " | Rent: " + strconv.Itoa(t.GetRent(nil, nil)))
+		fmt.Println("\n" + strconv.Itoa(count) + " - " + t.GetName() + " | Price: " + strconv.Itoa(t.GetPrice()) + " | Rent: " + strconv.Itoa(t.GetRent(nil, nil)) + " | Houses: " + strconv.Itoa(t.(*tile.Street).GetHouseAmount()))
 		count++
 	}
 }

@@ -87,26 +87,30 @@ func (street *Street) GetHouseAmount() int {
 	return street.houses
 }
 
-func (street *Street) buyHouse() {
+func (street *Street) GetHousePrice() int {
+	return street.housePrice
+}
+
+func (street *Street) BuyHouse() {
 	var curHouseAmount = street.GetHouseAmount()
 	var newHouseAmount = curHouseAmount + 1
 
 	street.setHouseAmount(newHouseAmount)
 }
 
-func (street *Street) sellHouse() {
+func (street *Street) SellHouse() {
 	var curHouseAmount = street.GetHouseAmount()
 	var newHouseAmount = curHouseAmount - 1
 
 	street.setHouseAmount(newHouseAmount)
 }
 
-func (street *Street) buyHotel() {
+func (street *Street) BuyHotel() {
 	street.hotelOwned = true
 	street.setHouseAmount(0)
 }
 
-func (street *Street) sellHotel() {
+func (street *Street) SellHotel() {
 	street.hotelOwned = false
 	street.setHouseAmount(4)
 }
