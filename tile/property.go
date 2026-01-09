@@ -20,6 +20,7 @@ type Property interface {
 	GetOwner() *player.Player
 	SetOwner(*player.Player)
 	IsOwned() bool
+	BuyProperty(player *player.Player)
 }
 
 func (tile *PropertyTile) Mortgage() int {

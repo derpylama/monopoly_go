@@ -1,6 +1,9 @@
 package tile
 
-import "monopoly/player"
+import (
+	"monopoly/events"
+	"monopoly/player"
+)
 
 type FreeParking struct {
 	BaseTile
@@ -23,6 +26,12 @@ func (freeParking *FreeParking) GetPosition() int {
 	return freeParking.Position
 }
 
-func (freeParking *FreeParking) OnLand(*player.Player) {
-
+func (freeParking *FreeParking) OnLand(player *player.Player, tiles []Tile, dice []int) []events.GameEvent {
+	return []events.GameEvent{
+		{
+			PlayerName: player.GetName(),
+			Type:       events.EventLandedOnFreeParking,
+			Details:    "Landed on Free Parking",
+		},
+	}
 }

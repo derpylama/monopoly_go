@@ -1,6 +1,9 @@
 package tile
 
-import "monopoly/player"
+import (
+	"monopoly/events"
+	"monopoly/player"
+)
 
 type TrainStation struct {
 	PropertyTile
@@ -37,7 +40,37 @@ func (trainStation *TrainStation) GetPosition() int {
 	return trainStation.Position
 }
 
-func (trainStation *TrainStation) OnLand(player *player.Player) {
+func (trainStation *TrainStation) OnLand(player *player.Player, tiles []Tile, dice []int) []events.GameEvent {
+	eventList := []events.GameEvent{}
+
+	if !trainStation.IsOwned() {
+		eventList = append(eventList, events.GameEvent{
+			Type:       events.EventLandedOnUnownedProperty,
+			PlayerName: player.GetName(),
+			TileName:   trainStation.GetName(),
+			Details:    player.GetName() + " landed on unowned property " + trainStation.Name,
+		})
+	} else if trainStation.GetOwner() != player {
+		rent := trainStation.GetRent(tiles, dice)
+		player.PayRent(trainStation.GetOwner(), rent)
+
+		eventList = append(eventList, events.GameEvent{
+			Type:       events.EventPaidRent,
+			PlayerName: player.GetName(),
+			TileName:   trainStation.GetName(),
+			Amount:     rent,
+			Details:    player.GetName() + " paid rent of " + string(rent) + " to " + trainStation.GetOwner().GetName() + " for landing on " + trainStation.GetName(),
+		})
+	} else {
+		eventList = append(eventList, events.GameEvent{
+			Type:       events.EventPaidRent,
+			PlayerName: player.GetName(),
+			TileName:   trainStation.GetName(),
+			Details:    player.GetName() + " landed on their own property " + trainStation.GetName(),
+		})
+	}
+
+	return eventList
 
 }
 

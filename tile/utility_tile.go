@@ -1,6 +1,10 @@
 package tile
 
-import "monopoly/player"
+import (
+	"monopoly/events"
+	"monopoly/player"
+	"strconv"
+)
 
 type Utility struct {
 	PropertyTile
@@ -31,7 +35,43 @@ func (utility *Utility) GetPosition() int {
 	return utility.Position
 }
 
-func (utility *Utility) OnLand(player *player.Player) {
+func (utility *Utility) OnLand(player *player.Player, tiles []Tile, dice []int) []events.GameEvent {
+	if utility.IsOwned() {
+		if utility.GetOwner() != player {
+			rent := utility.GetRent(tiles, dice)
+
+			player.PayRent(utility.GetOwner(), rent)
+
+			event := events.GameEvent{
+				Type:       events.EventPaidRent,
+				PlayerName: player.GetName(),
+				TileName:   utility.GetName(),
+				Details:    "Paid rent of " + strconv.Itoa(rent) + " to " + utility.GetOwner().GetName(),
+				Amount:     rent,
+			}
+
+			return []events.GameEvent{event}
+		} else {
+			event := events.GameEvent{
+				Type:       events.EventLandedOnOwnProperty,
+				PlayerName: player.GetName(),
+				TileName:   utility.GetName(),
+				Details:    "Landed on own utility",
+			}
+
+			return []events.GameEvent{event}
+		}
+	} else {
+		event := events.GameEvent{
+			Type:       events.EventLandedOnUnownedProperty,
+			PlayerName: player.GetName(),
+			TileName:   utility.GetName(),
+			Details:    "Landed on unowned utility",
+		}
+
+		return []events.GameEvent{event}
+
+	}
 
 }
 

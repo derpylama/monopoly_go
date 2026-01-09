@@ -2,71 +2,36 @@ package logger
 
 import (
 	"fmt"
-	"monopoly/tile"
+	"monopoly/events"
 	"strconv"
 )
 
-func LogOnLand(ownerName string, tileName string, isOwned bool, amountToPay int, currentPlayerName string, landedOnTile tile.Tile) {
+func LogOnLandInfo(event events.GameEvent) {
 	ClearScreen()
-	switch landedOnTile.(type) {
-	case *tile.Street:
-		if isOwned {
-			println(currentPlayerName + " landed on " + tileName + " owned by " + ownerName + " and pays " + strconv.Itoa(amountToPay))
-		} else {
-			println(currentPlayerName + " landed on " + tileName + " which is unowned.")
-		}
-	case *tile.TrainStation:
-		if isOwned {
-			println(currentPlayerName + " landed on " + tileName + " owned by " + ownerName + " and pays " + strconv.Itoa(amountToPay))
-		} else {
-			println(currentPlayerName + " landed on " + tileName + " which is unowned.")
+	fmt.Println("Player " + event.PlayerName + " landed on " + event.TileName + ". Details: " + event.Details + "\n")
+}
 
-		}
-	case *tile.TaxTile:
-		println(currentPlayerName + " landed on " + tileName + " and pays tax of " + strconv.Itoa(amountToPay))
+func LogEvent(event []events.GameEvent) {
+	ClearScreen()
 
-	case *tile.ChanceTile:
-		println(currentPlayerName + " landed on " + tileName)
-
-	case *tile.CommunityChest:
-		println(currentPlayerName + " landed on " + tileName)
-
-	case *tile.GoToJail:
-		println(currentPlayerName + " landed on Go To Jail Tile and is sent to Jail")
-
-	case *tile.JailTile:
-		println(currentPlayerName + " is just visiting Jail")
-
-	default:
-		println(currentPlayerName + " landed on " + tileName)
+	for _, e := range event {
+		fmt.Println("Event: " + string(e.Type) + "\nPlayer: " + e.PlayerName + "\nTile: " + e.TileName + "\nDetails: " + e.Details)
 	}
-
 }
 
-func LogRollDice(playerName string, roll []int, currentMoney int) {
+func LogOwnedProperties(playerName string, properties []string) {
 	ClearScreen()
 
-	println(playerName + " rolled a " + strconv.Itoa(roll[0]) + " and a " + strconv.Itoa(roll[1]) + " for a total of " + strconv.Itoa(roll[0]+roll[1]))
-	println("Current money: " + strconv.Itoa(currentMoney))
-}
+	var count int = 0
 
-func LogBuyProperty(playerName string, propertyName string, propertyPrice int, remainingMoney int) {
-	println(playerName + " bought " + propertyName + " for " + strconv.Itoa(propertyPrice) + ". Remaining money: " + strconv.Itoa(remainingMoney))
+	fmt.Println("Player " + playerName + " owns the following properties:")
+	for _, property := range properties {
+		fmt.Println(strconv.Itoa(count) + " - " + property)
+		count++
+	}
+	fmt.Println()
 }
 
 func ClearScreen() {
 	fmt.Print("\033[H\033[2J")
-}
-
-func LogPlayersProperties(playerName string, ownedProperties []tile.Property) {
-	ClearScreen()
-	println(playerName + "'s Properties:")
-
-	count := 0
-
-	for _, t := range ownedProperties {
-
-		fmt.Println("\n" + strconv.Itoa(count) + " - " + t.GetName() + " | Price: " + strconv.Itoa(t.GetPrice()) + " | Rent: " + strconv.Itoa(t.GetRent(nil, nil)) + " | Houses: " + strconv.Itoa(t.(*tile.Street).GetHouseAmount()))
-		count++
-	}
 }

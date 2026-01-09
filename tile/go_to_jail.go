@@ -1,6 +1,7 @@
 package tile
 
 import (
+	"monopoly/events"
 	"monopoly/player"
 )
 
@@ -29,6 +30,12 @@ func (jail *GoToJail) GetPosition() int {
 	return jail.Position
 }
 
-func (jail *GoToJail) OnLand(*player.Player) {
-
+func (jail *GoToJail) OnLand(player *player.Player, tiles []Tile, dice []int) []events.GameEvent {
+	event := events.GameEvent{
+		PlayerName: player.GetName(),
+		Type:       events.EventLandedOnGoToJail,
+		Details:    "Landed on Go To Jail",
+		TileName:   jail.GetName(),
+	}
+	return []events.GameEvent{event}
 }

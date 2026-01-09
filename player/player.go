@@ -1,6 +1,7 @@
 package player
 
 import (
+	"fmt"
 	cards "monopoly/card"
 	"monopoly/helper"
 )
@@ -37,6 +38,10 @@ func (player *Player) SetMoney(money int) {
 	player.money = helper.Clamp(money, 0, 100000000)
 }
 
+func (player *Player) CanAfford(amount int) bool {
+	return player.GetMoney() >= amount
+}
+
 func (player *Player) Move(rolledDice []int) {
 	curPos := player.GetPosition()
 
@@ -48,7 +53,20 @@ func (player *Player) Move(rolledDice []int) {
 
 	newPos := (diceTotal + curPos) % 40
 
+	if newPos < curPos {
+		//Passed GO
+		player.SetMoney(player.GetMoney() + 200)
+	}
+
 	player.position = newPos
+}
+
+func (player *Player) PayRent(playerToPay *Player, amount int) {
+	if player.Pay(amount) {
+		playerToPay.SetMoney(playerToPay.GetMoney() + amount)
+	} else {
+		fmt.Println("You can't afford to pay the rent")
+	}
 }
 
 func (player *Player) Pay(cost int) bool {

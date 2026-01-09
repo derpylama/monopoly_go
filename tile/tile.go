@@ -1,13 +1,14 @@
 package tile
 
 import (
+	"monopoly/events"
 	"monopoly/player"
 )
 
 type Tile interface {
 	GetPosition() int
 	GetName() string
-	OnLand(player *player.Player)
+	OnLand(player *player.Player, tiles []Tile, dice []int) []events.GameEvent
 }
 
 type BaseTile struct {
