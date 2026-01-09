@@ -2,6 +2,7 @@ package tile
 
 import (
 	"monopoly/events"
+	"monopoly/inputhandler"
 	"monopoly/player"
 )
 
@@ -50,6 +51,27 @@ func (trainStation *TrainStation) OnLand(player *player.Player, tiles []Tile, di
 			TileName:   trainStation.GetName(),
 			Details:    player.GetName() + " landed on unowned property " + trainStation.Name,
 		})
+
+		if inputhandler.PlayerWantsToBuyProperty(player.GetName(), trainStation.GetName(), trainStation.GetPrice()) {
+			trainStation.SetOwner(player)
+			player.Pay(trainStation.GetPrice())
+
+			eventList = append(eventList, events.GameEvent{
+				Type:       events.EventBoughtProperty,
+				PlayerName: player.GetName(),
+				TileName:   trainStation.GetName(),
+				Amount:     trainStation.GetPrice(),
+				Details:    player.GetName() + " bought " + trainStation.GetName() + " for " + string(trainStation.GetPrice()),
+			})
+		} else {
+			eventList = append(eventList, events.GameEvent{
+				Type:       events.EventDeclinedBuy,
+				PlayerName: player.GetName(),
+				TileName:   trainStation.GetName(),
+				Details:    player.GetName() + " declined to buy " + trainStation.GetName(),
+			})
+		}
+
 	} else if trainStation.GetOwner() != player {
 		rent := trainStation.GetRent(tiles, dice)
 		player.PayRent(trainStation.GetOwner(), rent)

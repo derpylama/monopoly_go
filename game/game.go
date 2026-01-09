@@ -91,8 +91,11 @@ func (game *Game) takeTurn() {
 
 				streetToBuildOn := inputhandler.PlayerEnterNumber("Enter the number of the property you want to build a house on:")
 
-				street := properties[streetToBuildOn].(*tile.Street)
-
+				street, ok := properties[streetToBuildOn].(*tile.Street)
+				if !ok {
+					fmt.Println("You can only build houses on street properties.")
+					continue
+				}
 				if inputhandler.PlayerWantsToBuildHouse(currentPlayer.GetName(), street.GetName(), street.GetHousePrice()) {
 					if currentPlayer.Pay(street.GetHousePrice()) {
 						street.BuyHouse()

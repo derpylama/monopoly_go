@@ -39,6 +39,6 @@ func NewCommunityChestTile(position int, name string) Tile {
 	}
 }
 
-func (commityChest *CommunityChest) initCards() {
+func (communityChest *CommunityChest) initCards() {
 
 }
