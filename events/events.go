@@ -27,3 +27,21 @@ type GameEvent struct {
 	Amount     int
 	Details    string
 }
+
+type EventInput string
+
+const (
+	InputBuyProperty     EventInput = "buy_property"
+	InputDeclineBuy      EventInput = "decline_buy"
+	InputBuyHouse        EventInput = "buy_house"
+	InputDeclineBuyHouse EventInput = "decline_buy_house"
+	InputRollDice        EventInput = "roll_dice"
+)
+
+type GameInput struct {
+	Type       EventInput
+	PlayerName string
+	TileName   string
+	Amount     int
+	Details    string
+}

@@ -15,5 +15,5 @@ func main() {
 
 	game := game.NewGame(players, board, dice)
 
-	game.StartGame()
+	go game.StartGame()
 }
