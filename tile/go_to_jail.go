@@ -32,10 +32,11 @@ func (jail *GoToJail) GetPosition() int {
 
 func (jail *GoToJail) OnLand(player *player.Player, tiles []Tile, dice []int) []events.GameEvent {
 	event := events.GameEvent{
-		PlayerName: player.GetName(),
-		Type:       events.EventLandedOnGoToJail,
-		Details:    "Landed on Go To Jail",
-		TileName:   jail.GetName(),
+		Type: events.EventLandedOnGoToJail,
+		Payload: events.LandedOnGoToJailPayload{
+			PlayerName: player.GetName(),
+			TileName:   jail.GetName(),
+		},
 	}
 	return []events.GameEvent{event}
 }

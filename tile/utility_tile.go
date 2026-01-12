@@ -43,30 +43,35 @@ func (utility *Utility) OnLand(player *player.Player, tiles []Tile, dice []int) 
 			player.PayRent(utility.GetOwner(), rent)
 
 			event := events.GameEvent{
-				Type:       events.EventPaidRent,
-				PlayerName: player.GetName(),
-				TileName:   utility.GetName(),
-				Details:    "Paid rent of " + strconv.Itoa(rent) + " to " + utility.GetOwner().GetName(),
-				Amount:     rent,
+				Type: events.EventPaidRent,
+				Payload: events.PaidRentPayload{
+					PlayerName: player.GetName(),
+					TileName:   utility.GetName(),
+					Details:    "Paid rent of " + strconv.Itoa(rent) + " to " + utility.GetOwner().GetName(),
+					Amount:     rent,
+				},
 			}
 
 			return []events.GameEvent{event}
 		} else {
 			event := events.GameEvent{
-				Type:       events.EventLandedOnOwnProperty,
-				PlayerName: player.GetName(),
-				TileName:   utility.GetName(),
-				Details:    "Landed on own utility",
+				Type: events.EventLandedOnOwnProperty,
+				Payload: events.LandedOnOwnPropertyPayload{
+					PlayerName: player.GetName(),
+					TileName:   utility.GetName(),
+				},
 			}
 
 			return []events.GameEvent{event}
 		}
 	} else {
 		event := events.GameEvent{
-			Type:       events.EventLandedOnUnownedProperty,
-			PlayerName: player.GetName(),
-			TileName:   utility.GetName(),
-			Details:    "Landed on unowned utility",
+			Type: events.EventLandedOnUnownedProperty,
+			Payload: events.LandedOnUnownedPropertyPayload{
+				PlayerName: player.GetName(),
+				TileName:   utility.GetName(),
+				Amount:     utility.GetPrice(),
+			},
 		}
 
 		return []events.GameEvent{event}

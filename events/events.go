@@ -16,16 +16,12 @@ const (
 	EventLandedOnJail            EventType = "landed_on_jail"
 	EventLandedOnChance          EventType = "landed_on_chance"
 	EventLandedOnCommunityChest  EventType = "landed_on_community_chest"
+	EventRolledDice              EventType = "rolled_dice"
 )
 
 type GameEvent struct {
-	Type       EventType
-	PlayerName string
-	Title      string
-	Owner      string
-	TileName   string
-	Amount     int
-	Details    string
+	Type    EventType
+	Payload any
 }
 
 type EventInput string
@@ -36,6 +32,9 @@ const (
 	InputBuyHouse        EventInput = "buy_house"
 	InputDeclineBuyHouse EventInput = "decline_buy_house"
 	InputRollDice        EventInput = "roll_dice"
+	InputEndTurn         EventInput = "end_turn"
+	InputPromtNewPlayer  EventInput = "prompt_new_player"
+	InputPromtGameStart  EventInput = "prompt_game_start"
 )
 
 type GameInput struct {
@@ -44,4 +43,75 @@ type GameInput struct {
 	TileName   string
 	Amount     int
 	Details    string
+}
+
+type PaidRentPayload struct {
+	PlayerName string
+	Owner      string
+	TileName   string
+	Amount     int
+	Details    string
+}
+
+type BoughtPropertyPayload struct {
+	PlayerName string
+	TileName   string
+	Amount     int
+	Details    string
+}
+
+type DeclinedBuyPayload struct {
+	PlayerName string
+	TileName   string
+	Amount     int
+}
+
+type LandedOnUnownedPropertyPayload struct {
+	PlayerName string
+	TileName   string
+	Amount     int
+}
+
+type LandedOnOwnPropertyPayload struct {
+	PlayerName string
+	TileName   string
+}
+
+type LandedOnGoToJailPayload struct {
+	PlayerName string
+	TileName   string
+}
+
+type LandedOnJailPayload struct {
+	PlayerName string
+	TileName   string
+}
+
+type LandedOnTaxPayload struct {
+	PlayerName string
+	TileName   string
+	Amount     int
+}
+
+type LandedOnFreeParkingPayload struct {
+	PlayerName string
+}
+
+type RolledDicePayload struct {
+	PlayerName string
+}
+
+type LandedOnGoPayload struct {
+	PlayerName string
+	TileName   string
+}
+
+type LandedOnChancePayload struct {
+	PlayerName string
+	TileName   string
+}
+
+type LandedOnCommunityChestPayload struct {
+	PlayerName string
+	TileName   string
 }

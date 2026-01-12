@@ -46,10 +46,10 @@ func (trainStation *TrainStation) OnLand(player *player.Player, tiles []Tile, di
 
 	if !trainStation.IsOwned() {
 		eventList = append(eventList, events.GameEvent{
-			Type:       events.EventLandedOnUnownedProperty,
-			PlayerName: player.GetName(),
-			TileName:   trainStation.GetName(),
-			Details:    player.GetName() + " landed on unowned property " + trainStation.Name,
+			Type: events.EventLandedOnUnownedProperty,
+			Payload: events.LandedOnUnownedPropertyPayload{
+				PlayerName: player.GetName(),
+				TileName:   trainStation.GetName()},
 		})
 
 		if inputhandler.PlayerWantsToBuyProperty(player.GetName(), trainStation.GetName(), trainStation.GetPrice()) {
@@ -57,18 +57,21 @@ func (trainStation *TrainStation) OnLand(player *player.Player, tiles []Tile, di
 			player.Pay(trainStation.GetPrice())
 
 			eventList = append(eventList, events.GameEvent{
-				Type:       events.EventBoughtProperty,
-				PlayerName: player.GetName(),
-				TileName:   trainStation.GetName(),
-				Amount:     trainStation.GetPrice(),
-				Details:    player.GetName() + " bought " + trainStation.GetName() + " for " + string(trainStation.GetPrice()),
+				Type: events.EventBoughtProperty,
+				Payload: events.BoughtPropertyPayload{
+					PlayerName: player.GetName(),
+					TileName:   trainStation.GetName(),
+					Amount:     trainStation.GetPrice(),
+					Details:    player.GetName() + " bought " + trainStation.GetName() + " for " + string(trainStation.GetPrice())},
 			})
 		} else {
 			eventList = append(eventList, events.GameEvent{
-				Type:       events.EventDeclinedBuy,
-				PlayerName: player.GetName(),
-				TileName:   trainStation.GetName(),
-				Details:    player.GetName() + " declined to buy " + trainStation.GetName(),
+				Type: events.EventDeclinedBuy,
+				Payload: events.DeclinedBuyPayload{
+					PlayerName: player.GetName(),
+					TileName:   trainStation.GetName(),
+					Amount:     trainStation.GetPrice(),
+				},
 			})
 		}
 
@@ -77,18 +80,23 @@ func (trainStation *TrainStation) OnLand(player *player.Player, tiles []Tile, di
 		player.PayRent(trainStation.GetOwner(), rent)
 
 		eventList = append(eventList, events.GameEvent{
-			Type:       events.EventPaidRent,
-			PlayerName: player.GetName(),
-			TileName:   trainStation.GetName(),
-			Amount:     rent,
-			Details:    player.GetName() + " paid rent of " + string(rent) + " to " + trainStation.GetOwner().GetName() + " for landing on " + trainStation.GetName(),
+			Type: events.EventPaidRent,
+			Payload: events.PaidRentPayload{
+				PlayerName: player.GetName(),
+				TileName:   trainStation.GetName(),
+				Amount:     rent,
+				Details:    player.GetName() + " paid rent of " + string(rent) + " to " + trainStation.GetOwner().GetName() + " for landing on " + trainStation.GetName(),
+			},
 		})
 	} else {
 		eventList = append(eventList, events.GameEvent{
-			Type:       events.EventPaidRent,
-			PlayerName: player.GetName(),
-			TileName:   trainStation.GetName(),
-			Details:    player.GetName() + " landed on their own property " + trainStation.GetName(),
+			Type: events.EventPaidRent,
+			Payload: events.PaidRentPayload{
+				PlayerName: player.GetName(),
+				TileName:   trainStation.GetName(),
+				Amount:     trainStation.GetRent(tiles, dice),
+				Details:    "Landed on own property " + trainStation.GetName(),
+			},
 		})
 	}
 

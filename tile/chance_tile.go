@@ -21,10 +21,11 @@ func (chanceTile *ChanceTile) GetPosition() int {
 
 func (chanceTile *ChanceTile) OnLand(player *player.Player, tiles []Tile, dice []int) []events.GameEvent {
 	event := events.GameEvent{
-		PlayerName: player.GetName(),
-		TileName:   chanceTile.GetName(),
-		Type:       events.EventLandedOnChance,
-		Details:    "Landed on Chance tile",
+		Type: events.EventLandedOnChance,
+		Payload: events.LandedOnChancePayload{
+			PlayerName: player.GetName(),
+			TileName:   chanceTile.GetName(),
+		},
 	}
 
 	return []events.GameEvent{event}

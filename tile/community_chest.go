@@ -21,10 +21,11 @@ func (communityChest *CommunityChest) GetPosition() int {
 
 func (communityChest *CommunityChest) OnLand(player *player.Player, tiles []Tile, dice []int) []events.GameEvent {
 	event := events.GameEvent{
-		PlayerName: player.GetName(),
-		TileName:   communityChest.GetName(),
-		Type:       events.EventLandedOnCommunityChest,
-		Details:    "Landed on community chest tile",
+		Type: events.EventLandedOnCommunityChest,
+		Payload: events.LandedOnCommunityChestPayload{
+			PlayerName: player.GetName(),
+			TileName:   communityChest.GetName(),
+		},
 	}
 
 	return []events.GameEvent{event}

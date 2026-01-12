@@ -5,6 +5,8 @@ import (
 	"monopoly/dice"
 	"monopoly/game"
 	"monopoly/player"
+
+	"fyne.io/fyne/v2/app"
 )
 
 func main() {
@@ -13,7 +15,12 @@ func main() {
 	board := board.NewBoard()
 	dice := dice.NewDice(2, 6)
 
-	game := game.NewGame(players, board, dice)
+	game := game.NewGame()
 
 	go game.StartGame()
+
+	mainContext := app.New()
+	mainWindow := mainContext.NewWindow("Monopoly")
+	mainWindow.ShowAndRun()
+
 }

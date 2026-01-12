@@ -38,11 +38,13 @@ func (street *Street) OnLand(player *player.Player, tiles []Tile, dice []int) []
 		player.PayRent(street.GetOwner(), rent)
 
 		eventList = append(eventList, events.GameEvent{
-			Type:       events.EventPaidRent,
-			PlayerName: player.GetName(),
-			Owner:      street.GetOwner().GetName(),
-			TileName:   street.GetName(),
-			Amount:     rent,
+			Type: events.EventPaidRent,
+			Payload: events.PaidRentPayload{
+				PlayerName: player.GetName(),
+				Owner:      street.GetOwner().GetName(),
+				TileName:   street.GetName(),
+				Amount:     rent,
+			},
 		})
 
 	}
@@ -55,23 +57,30 @@ func (street *Street) OnLand(player *player.Player, tiles []Tile, dice []int) []
 			fmt.Println(player.GetName(), "bought", street.GetName(), "for", street.GetPrice())
 
 			eventList = append(eventList, events.GameEvent{
-				Type:       events.EventLandedOnUnownedProperty,
-				PlayerName: player.GetName(),
-				TileName:   street.GetName(),
-				Amount:     street.GetPrice(),
+				Type: events.EventLandedOnUnownedProperty,
+				Payload: events.LandedOnUnownedPropertyPayload{
+					PlayerName: player.GetName(),
+					TileName:   street.GetName(),
+					Amount:     street.GetPrice(),
+				},
 			})
 
 			eventList = append(eventList, events.GameEvent{
-				Type:       events.EventBoughtProperty,
-				PlayerName: player.GetName(),
-				TileName:   street.GetName(),
-				Amount:     street.GetPrice(),
+				Type: events.EventBoughtProperty,
+				Payload: events.BoughtPropertyPayload{
+					PlayerName: player.GetName(),
+					TileName:   street.GetName(),
+					Amount:     street.GetPrice(),
+				},
 			})
 		} else {
 			eventList = append(eventList, events.GameEvent{
-				Type:       events.EventDeclinedBuy,
-				PlayerName: player.GetName(),
-				TileName:   street.GetName(),
+				Type: events.EventDeclinedBuy,
+				Payload: events.DeclinedBuyPayload{
+					PlayerName: player.GetName(),
+					TileName:   street.GetName(),
+					Amount:     street.GetPrice(),
+				},
 			})
 
 		}

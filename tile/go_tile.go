@@ -24,10 +24,11 @@ func (goTile *goTile) GetPosition() int {
 
 func (goTile *goTile) OnLand(player *player.Player, tiles []Tile, dice []int) []events.GameEvent {
 	event := events.GameEvent{
-		PlayerName: player.GetName(),
-		TileName:   goTile.GetName(),
-		Type:       events.EventLandedOnGo,
-		Details:    "Landed on Go tile",
+		Type: events.EventLandedOnGo,
+		Payload: events.LandedOnGoPayload{
+			PlayerName: player.GetName(),
+			TileName:   goTile.GetName(),
+		},
 	}
 
 	events := []events.GameEvent{event}

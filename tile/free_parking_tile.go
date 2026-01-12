@@ -29,9 +29,10 @@ func (freeParking *FreeParking) GetPosition() int {
 func (freeParking *FreeParking) OnLand(player *player.Player, tiles []Tile, dice []int) []events.GameEvent {
 	return []events.GameEvent{
 		{
-			PlayerName: player.GetName(),
-			Type:       events.EventLandedOnFreeParking,
-			Details:    "Landed on Free Parking",
+			Type: events.EventLandedOnFreeParking,
+			Payload: events.LandedOnFreeParkingPayload{
+				PlayerName: player.GetName(),
+			},
 		},
 	}
 }

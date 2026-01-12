@@ -17,15 +17,26 @@ type Game struct {
 	board         *board.Board
 	gameOver      bool
 	dice          *dice.Dice
+
+	//contains all events that occur during the game
+	bus *events.Bus
 }
 
-func NewGame(players []*player.Player, board *board.Board, dice *dice.Dice) Game {
+func NewGame(bus *events.Bus) Game {
+	// When a new game is created all players, board and dice should be initialized
+
+	players := []*player.Player{}
+
+	board := board.NewBoard()
+	dice := dice.NewDice(2, 6)
+
 	return Game{
 		players:       players,
 		currentPlayer: 0,
 		board:         board,
 		gameOver:      false,
 		dice:          dice,
+		bus:           bus,
 	}
 }
 
@@ -41,12 +52,17 @@ func (game *Game) EndGame() {
 
 }
 
+func (game *Game) AddPlayer() {
+	//Gets all required inputs and creates a new player
+
+}
+
 func (game *Game) takeTurn() {
 	currentPlayer := game.players[game.currentPlayer]
 
 	landedOnTile := game.board.GetTile(currentPlayer.GetPosition())
 
-	logger.LogOnLandInfo(events.GameEvent{PlayerName: currentPlayer.GetName(), TileName: landedOnTile.GetName(), Details: currentPlayer.GetName() + " landed on " + landedOnTile.GetName()})
+	//logger.LogOnLandInfo(events.GameEvent{PlayerName: currentPlayer.GetName(), TileName: landedOnTile.GetName(), Details: currentPlayer.GetName() + " landed on " + landedOnTile.GetName()})
 
 	turnIsOver := false
 	hasRolled := false
@@ -122,7 +138,7 @@ func (game *Game) takeTurn() {
 
 				landedOnTile = game.board.GetTile(currentPlayer.GetPosition())
 
-				logger.LogOnLandInfo(events.GameEvent{PlayerName: currentPlayer.GetName(), TileName: landedOnTile.GetName(), Details: currentPlayer.GetName() + " landed on " + landedOnTile.GetName()})
+				//logger.LogOnLandInfo(events.GameEvent{PlayerName: currentPlayer.GetName(), TileName: landedOnTile.GetName(), Details: currentPlayer.GetName() + " landed on " + landedOnTile.GetName()})
 				eventList := landedOnTile.OnLand(currentPlayer, game.board.Tiles(), roll)
 				logger.LogEvent(eventList)
 			} else if hasRolled {

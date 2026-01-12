@@ -3,7 +3,6 @@ package tile
 import (
 	"monopoly/events"
 	"monopoly/player"
-	"strconv"
 )
 
 type TaxTile struct {
@@ -36,8 +35,12 @@ func (taxTile *TaxTile) OnLand(player *player.Player, tiles []Tile, dice []int) 
 	player.SetMoney(playerMoney)
 
 	event := events.GameEvent{
-		Type:    events.EventPaidTax,
-		Details: "Player " + player.GetName() + " paid tax of amount " + strconv.Itoa(taxTile.getTax()),
+		Type: events.EventPaidTax,
+		Payload: events.LandedOnTaxPayload{
+			PlayerName: player.GetName(),
+			TileName:   taxTile.GetName(),
+			Amount:     taxTile.getTax(),
+		},
 	}
 
 	return []events.GameEvent{event}
