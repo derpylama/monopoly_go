@@ -1,9 +1,9 @@
 package tile
 
 import (
+	"monopoly/common"
 	"monopoly/events"
 	"monopoly/player"
-	"strconv"
 )
 
 type Utility struct {
@@ -12,7 +12,7 @@ type Utility struct {
 	monopolyMultiplier int
 }
 
-func NewUtilityTile(buyPrice int, name string, mortgageValue int, baseMultiplier int, monopolyMultiplier int, position int) Tile {
+func NewUtilityTile(buyPrice int, name string, mortgageValue int, baseMultiplier int, monopolyMultiplier int, position int) common.Tile {
 	return &Utility{
 		PropertyTile: PropertyTile{
 			buyPrice:      buyPrice,
@@ -35,46 +35,29 @@ func (utility *Utility) GetPosition() int {
 	return utility.Position
 }
 
-func (utility *Utility) OnLand(player *player.Player, tiles []Tile, dice []int) []events.GameEvent {
+func (utility *Utility) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *events.Bus) {
 	if utility.IsOwned() {
 		if utility.GetOwner() != player {
 			rent := utility.GetRent(tiles, dice)
-
-			player.PayRent(utility.GetOwner(), rent)
-
-			event := events.GameEvent{
-				Type: events.EventPaidRent,
+			bus.Publish(events.GameEvent{
+				Type: events.PaidRent,
 				Payload: events.PaidRentPayload{
 					PlayerName: player.GetName(),
+					Owner:      utility.GetOwner().GetName(),
 					TileName:   utility.GetName(),
-					Details:    "Paid rent of " + strconv.Itoa(rent) + " to " + utility.GetOwner().GetName(),
-					Amount:     rent,
+					Rent:       rent,
 				},
-			}
-
-			return []events.GameEvent{event}
-		} else {
-			event := events.GameEvent{
-				Type: events.EventLandedOnOwnProperty,
-				Payload: events.LandedOnOwnPropertyPayload{
-					PlayerName: player.GetName(),
-					TileName:   utility.GetName(),
-				},
-			}
-
-			return []events.GameEvent{event}
+			})
 		}
 	} else {
-		event := events.GameEvent{
-			Type: events.EventLandedOnUnownedProperty,
+		bus.Publish(events.GameEvent{
+			Type: events.LandedOnUnownedProperty,
 			Payload: events.LandedOnUnownedPropertyPayload{
 				PlayerName: player.GetName(),
 				TileName:   utility.GetName(),
-				Amount:     utility.GetPrice(),
+				Price:      utility.GetPrice(),
 			},
-		}
-
-		return []events.GameEvent{event}
+		})
 
 	}
 
@@ -92,7 +75,7 @@ func (utility *Utility) IsOwned() bool {
 	}
 }
 
-func (utility *Utility) GetRent(tiles []Tile, rolledDice []int) int {
+func (utility *Utility) GetRent(tiles []common.Tile, rolledDice []int) int {
 
 	var diceTotal int
 

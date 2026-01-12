@@ -1,8 +1,8 @@
 package tile
 
 import (
+	"monopoly/common"
 	"monopoly/events"
-	"monopoly/inputhandler"
 	"monopoly/player"
 )
 
@@ -11,7 +11,7 @@ type TrainStation struct {
 	rentPerStation int
 }
 
-func NewTrainStation(buyPrice int, mortgageValue int, name string, position int, rentPerStation int) Tile {
+func NewTrainStation(buyPrice int, mortgageValue int, name string, position int, rentPerStation int) common.Tile {
 	return &TrainStation{
 		PropertyTile: PropertyTile{
 			BaseTile: BaseTile{
@@ -41,66 +41,7 @@ func (trainStation *TrainStation) GetPosition() int {
 	return trainStation.Position
 }
 
-func (trainStation *TrainStation) OnLand(player *player.Player, tiles []Tile, dice []int) []events.GameEvent {
-	eventList := []events.GameEvent{}
-
-	if !trainStation.IsOwned() {
-		eventList = append(eventList, events.GameEvent{
-			Type: events.EventLandedOnUnownedProperty,
-			Payload: events.LandedOnUnownedPropertyPayload{
-				PlayerName: player.GetName(),
-				TileName:   trainStation.GetName()},
-		})
-
-		if inputhandler.PlayerWantsToBuyProperty(player.GetName(), trainStation.GetName(), trainStation.GetPrice()) {
-			trainStation.SetOwner(player)
-			player.Pay(trainStation.GetPrice())
-
-			eventList = append(eventList, events.GameEvent{
-				Type: events.EventBoughtProperty,
-				Payload: events.BoughtPropertyPayload{
-					PlayerName: player.GetName(),
-					TileName:   trainStation.GetName(),
-					Amount:     trainStation.GetPrice(),
-					Details:    player.GetName() + " bought " + trainStation.GetName() + " for " + string(trainStation.GetPrice())},
-			})
-		} else {
-			eventList = append(eventList, events.GameEvent{
-				Type: events.EventDeclinedBuy,
-				Payload: events.DeclinedBuyPayload{
-					PlayerName: player.GetName(),
-					TileName:   trainStation.GetName(),
-					Amount:     trainStation.GetPrice(),
-				},
-			})
-		}
-
-	} else if trainStation.GetOwner() != player {
-		rent := trainStation.GetRent(tiles, dice)
-		player.PayRent(trainStation.GetOwner(), rent)
-
-		eventList = append(eventList, events.GameEvent{
-			Type: events.EventPaidRent,
-			Payload: events.PaidRentPayload{
-				PlayerName: player.GetName(),
-				TileName:   trainStation.GetName(),
-				Amount:     rent,
-				Details:    player.GetName() + " paid rent of " + string(rent) + " to " + trainStation.GetOwner().GetName() + " for landing on " + trainStation.GetName(),
-			},
-		})
-	} else {
-		eventList = append(eventList, events.GameEvent{
-			Type: events.EventPaidRent,
-			Payload: events.PaidRentPayload{
-				PlayerName: player.GetName(),
-				TileName:   trainStation.GetName(),
-				Amount:     trainStation.GetRent(tiles, dice),
-				Details:    "Landed on own property " + trainStation.GetName(),
-			},
-		})
-	}
-
-	return eventList
+func (trainStation *TrainStation) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *events.Bus) {
 
 }
 
@@ -108,7 +49,7 @@ func (trainStation *TrainStation) GetPrice() int {
 	return trainStation.buyPrice
 }
 
-func (trainStation *TrainStation) GetRent(tiles []Tile, rolledDice []int) int {
+func (trainStation *TrainStation) GetRent(tiles []common.Tile, rolledDice []int) int {
 
 	count := 0
 

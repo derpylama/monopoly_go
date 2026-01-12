@@ -1,6 +1,7 @@
 package tile
 
 import (
+	"monopoly/common"
 	"monopoly/events"
 	"monopoly/player"
 )
@@ -14,7 +15,7 @@ func (taxTile *TaxTile) getTax() int {
 	return taxTile.taxAmount
 }
 
-func NewTaxTile(position int, taxAmount int, name string) Tile {
+func NewTaxTile(position int, taxAmount int, name string) common.Tile {
 	return &TaxTile{
 		BaseTile: BaseTile{
 			Position: position,
@@ -28,22 +29,31 @@ func (taxTile *TaxTile) GetName() string {
 	return taxTile.Name
 }
 
-func (taxTile *TaxTile) OnLand(player *player.Player, tiles []Tile, dice []int) []events.GameEvent {
+func (taxTile *TaxTile) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *events.Bus) {
 	playerMoney := player.GetMoney()
 	playerMoney -= taxTile.getTax()
 
 	player.SetMoney(playerMoney)
 
-	event := events.GameEvent{
-		Type: events.EventPaidTax,
-		Payload: events.LandedOnTaxPayload{
+	bus.Publish(events.GameEvent{
+		Type: events.LandedOnTax,
+		Payload: events.TaxPayload{
 			PlayerName: player.GetName(),
 			TileName:   taxTile.GetName(),
-			Amount:     taxTile.getTax(),
+			TaxAmount:  taxTile.getTax(),
 		},
-	}
+	})
 
-	return []events.GameEvent{event}
+	player.Pay(taxTile.getTax())
+
+	bus.Publish(events.GameEvent{
+		Type: events.PaidTax,
+		Payload: events.TaxPayload{
+			PlayerName: player.GetName(),
+			TileName:   taxTile.GetName(),
+			TaxAmount:  taxTile.getTax(),
+		},
+	})
 }
 
 func (taxTile *TaxTile) GetPosition() int {

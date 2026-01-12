@@ -1,17 +1,18 @@
 package board
 
 import (
+	"monopoly/common"
 	"monopoly/helper"
 	"monopoly/tile"
 )
 
 type Board struct {
-	tiles []tile.Tile
+	tiles []common.Tile
 }
 
 func (board *Board) initBoard() {
 
-	board.tiles = []tile.Tile{
+	board.tiles = []common.Tile{
 		tile.NewGoTile(0, 200),
 
 		// tile.NewStreetTile(buyPrice int, price per house []int, color string, rent int, mortageValue int, hotelRent int, name string, position int)
@@ -103,11 +104,11 @@ func NewBoard() *Board {
 }
 
 // Exported accessor
-func (b *Board) Tiles() []tile.Tile {
+func (b *Board) Tiles() []common.Tile {
 	return b.tiles
 }
 
-func (board *Board) GetTile(position int) tile.Tile {
+func (board *Board) GetTile(position int) common.Tile {
 
 	clampedVal := helper.Clamp(position, 0, 39)
 

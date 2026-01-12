@@ -1,26 +1,37 @@
 package main
 
 import (
-	"monopoly/board"
-	"monopoly/dice"
+	"monopoly/events"
 	"monopoly/game"
-	"monopoly/player"
-
-	"fyne.io/fyne/v2/app"
+	"monopoly/logger"
 )
 
 func main() {
 
-	players := []*player.Player{player.NewPlayer(1500, "player1"), player.NewPlayer(1500, "player2")}
-	board := board.NewBoard()
-	dice := dice.NewDice(2, 6)
+	// players := []*player.Player{player.NewPlayer(1500, "player1"), player.NewPlayer(1500, "player2")}
+	// board := board.NewBoard()
+	// dice := dice.NewDice(2, 6)
 
-	game := game.NewGame()
+	bus := events.NewBus()
+	commandChannel := make(chan game.GameCommand)
+	game := game.NewGame(bus)
+
+	// 1️⃣ Create logger
+	log := logger.New(true)
 
 	go game.StartGame()
 
-	mainContext := app.New()
-	mainWindow := mainContext.NewWindow("Monopoly")
-	mainWindow.ShowAndRun()
+	logger.RegisterListeners(bus, log)
+	logger.RegisterPromptListeners(bus, commandChannel)
 
+	go func() {
+		for cmd := range commandChannel {
+			game.Handle(cmd)
+		}
+	}()
+
+	// mainContext := app.New()
+	// mainWindow := mainContext.NewWindow("Monopoly")
+	// mainWindow.ShowAndRun()
+	game.StartGame()
 }

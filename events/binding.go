@@ -12,23 +12,23 @@ type Event struct {
 }
 
 // Listener is a function that reacts to an event
-type Listener func(Event)
+type Listener func(GameEvent)
 
 // Bus is the central event dispatcher
 type Bus struct {
 	mu        sync.RWMutex
-	listeners map[Type][]Listener
+	listeners map[EventType][]Listener
 }
 
 // NewBus creates and initializes a new event bus
 func NewBus() *Bus {
 	return &Bus{
-		listeners: make(map[Type][]Listener),
+		listeners: make(map[EventType][]Listener),
 	}
 }
 
 // Subscribe registers a listener for a specific event type
-func (b *Bus) Subscribe(t Type, l Listener) {
+func (b *Bus) Subscribe(t EventType, l Listener) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -36,7 +36,7 @@ func (b *Bus) Subscribe(t Type, l Listener) {
 }
 
 // Publish sends an event to all listeners subscribed to its type
-func (b *Bus) Publish(e Event) {
+func (b *Bus) Publish(e GameEvent) {
 	b.mu.RLock()
 	listeners := b.listeners[e.Type]
 	b.mu.RUnlock()
@@ -51,5 +51,5 @@ func (b *Bus) Clear() {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	b.listeners = make(map[Type][]Listener)
+	b.listeners = make(map[EventType][]Listener)
 }

@@ -1,6 +1,7 @@
 package tile
 
 import (
+	"monopoly/common"
 	"monopoly/events"
 	"monopoly/player"
 )
@@ -13,7 +14,7 @@ func (jail *GoToJail) setPlayerToJail(player *player.Player) {
 
 }
 
-func NewGoToJailTile(name string, position int) Tile {
+func NewGoToJailTile(name string, position int) common.Tile {
 	return &GoToJail{
 		BaseTile: BaseTile{
 			Name:     name,
@@ -30,13 +31,6 @@ func (jail *GoToJail) GetPosition() int {
 	return jail.Position
 }
 
-func (jail *GoToJail) OnLand(player *player.Player, tiles []Tile, dice []int) []events.GameEvent {
-	event := events.GameEvent{
-		Type: events.EventLandedOnGoToJail,
-		Payload: events.LandedOnGoToJailPayload{
-			PlayerName: player.GetName(),
-			TileName:   jail.GetName(),
-		},
-	}
-	return []events.GameEvent{event}
+func (jail *GoToJail) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *events.Bus) {
+
 }

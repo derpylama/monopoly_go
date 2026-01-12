@@ -1,6 +1,7 @@
 package tile
 
 import (
+	"monopoly/common"
 	player "monopoly/player"
 )
 
@@ -14,9 +15,9 @@ type PropertyTile struct {
 }
 
 type Property interface {
-	Tile
+	common.Tile
 	GetPrice() int
-	GetRent(tiles []Tile, rolledDice []int) int
+	GetRent(tiles []common.Tile, rolledDice []int) int
 	GetOwner() *player.Player
 	SetOwner(*player.Player)
 	IsOwned() bool

@@ -3,20 +3,34 @@ package events
 type EventType string
 
 const (
-	EventPaidRent                EventType = "paid_rent"
-	EventBoughtProperty          EventType = "bought_property"
-	EventDeclinedBuy             EventType = "declined_buy"
-	EventBoughtHouse             EventType = "bought_house"
-	EventLandedOnGo              EventType = "landed_on_go"
-	EventPaidTax                 EventType = "paid_tax"
-	EventLandedOnUnownedProperty EventType = "landed_on_unowned_property"
-	EventLandedOnOwnProperty     EventType = "landed_on_own_property"
-	EventLandedOnFreeParking     EventType = "landed_on_free_parking"
-	EventLandedOnGoToJail        EventType = "landed_on_go_to_jail"
-	EventLandedOnJail            EventType = "landed_on_jail"
-	EventLandedOnChance          EventType = "landed_on_chance"
-	EventLandedOnCommunityChest  EventType = "landed_on_community_chest"
-	EventRolledDice              EventType = "rolled_dice"
+	PaidRent                EventType = "paid_rent"
+	BoughtProperty          EventType = "bought_property"
+	DeclinedBuy             EventType = "declined_buy"
+	BoughtHouse             EventType = "bought_house"
+	LandedOnGo              EventType = "landed_on_go"
+	PaidTax                 EventType = "paid_tax"
+	LandedOnTile            EventType = "landed_on_tile"
+	LandedOnUnownedProperty EventType = "landed_on_unowned_property"
+	LandedOnOwnProperty     EventType = "landed_on_own_property"
+	LandedOnFreeParking     EventType = "landed_on_free_parking"
+	LandedOnGoToJail        EventType = "landed_on_go_to_jail"
+	LandedOnJail            EventType = "landed_on_jail"
+	LandedOnChance          EventType = "landed_on_chance"
+	LandedOnCommunityChest  EventType = "landed_on_community_chest"
+	LandedOnTax             EventType = "landed_on_tax"
+	RolledDice              EventType = "rolled_dice"
+	LandedOnStreet          EventType = "landed_on_street"
+
+	InputBuyProperty       EventType = "buy_property"
+	InputDeclineBuy        EventType = "decline_buy"
+	InputBuyHouse          EventType = "buy_house"
+	InputDeclineBuyHouse   EventType = "decline_buy_house"
+	InputRollDice          EventType = "roll_dice"
+	InputEndTurn           EventType = "end_turn"
+	InputPromptNewPlayer   EventType = "prompt_new_player"
+	InputPromptGameStart   EventType = "prompt_game_start"
+	InputPromptRollDice    EventType = "prompt_roll_dice"
+	InputPromptBuyProperty EventType = "prompt_buy_property"
 )
 
 type GameEvent struct {
@@ -24,39 +38,18 @@ type GameEvent struct {
 	Payload any
 }
 
-type EventInput string
-
-const (
-	InputBuyProperty     EventInput = "buy_property"
-	InputDeclineBuy      EventInput = "decline_buy"
-	InputBuyHouse        EventInput = "buy_house"
-	InputDeclineBuyHouse EventInput = "decline_buy_house"
-	InputRollDice        EventInput = "roll_dice"
-	InputEndTurn         EventInput = "end_turn"
-	InputPromtNewPlayer  EventInput = "prompt_new_player"
-	InputPromtGameStart  EventInput = "prompt_game_start"
-)
-
-type GameInput struct {
-	Type       EventInput
-	PlayerName string
-	TileName   string
-	Amount     int
-	Details    string
-}
-
 type PaidRentPayload struct {
 	PlayerName string
 	Owner      string
 	TileName   string
-	Amount     int
+	Rent       int
 	Details    string
 }
 
 type BoughtPropertyPayload struct {
 	PlayerName string
 	TileName   string
-	Amount     int
+	Price      int
 	Details    string
 }
 
@@ -66,10 +59,15 @@ type DeclinedBuyPayload struct {
 	Amount     int
 }
 
+type LandedOnTilePayload struct {
+	PlayerName string
+	TileName   string
+}
+
 type LandedOnUnownedPropertyPayload struct {
 	PlayerName string
 	TileName   string
-	Amount     int
+	Price      int
 }
 
 type LandedOnOwnPropertyPayload struct {
@@ -90,7 +88,7 @@ type LandedOnJailPayload struct {
 type LandedOnTaxPayload struct {
 	PlayerName string
 	TileName   string
-	Amount     int
+	TaxAmount  int
 }
 
 type LandedOnFreeParkingPayload struct {
@@ -99,6 +97,7 @@ type LandedOnFreeParkingPayload struct {
 
 type RolledDicePayload struct {
 	PlayerName string
+	Dice       []int
 }
 
 type LandedOnGoPayload struct {
@@ -114,4 +113,10 @@ type LandedOnChancePayload struct {
 type LandedOnCommunityChestPayload struct {
 	PlayerName string
 	TileName   string
+}
+
+type TaxPayload struct {
+	PlayerName string
+	TileName   string
+	TaxAmount  int
 }

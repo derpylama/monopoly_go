@@ -1,11 +1,9 @@
 package tile
 
 import (
-	"fmt"
+	"monopoly/common"
 	"monopoly/events"
 	"monopoly/helper"
-	"monopoly/inputhandler"
-
 	"monopoly/player"
 )
 
@@ -27,72 +25,51 @@ func (street *Street) GetPosition() int {
 	return street.Position
 }
 
-func (street *Street) OnLand(player *player.Player, tiles []Tile, dice []int) []events.GameEvent {
+func (street *Street) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *events.Bus) {
 
-	eventList := []events.GameEvent{}
+	bus.Publish(events.GameEvent{
+		Type: events.LandedOnStreet,
+		Payload: events.LandedOnTilePayload{
+			PlayerName: player.GetName(),
+			TileName:   street.GetName(),
+		},
+	})
 
-	if street.IsOwned() && street.GetOwner() != player {
-		// if the property is owned then get rent and pay
-		rent := street.GetRent(tiles, dice)
-
-		player.PayRent(street.GetOwner(), rent)
-
-		eventList = append(eventList, events.GameEvent{
-			Type: events.EventPaidRent,
-			Payload: events.PaidRentPayload{
+	if !street.IsOwned() {
+		bus.Publish(events.GameEvent{
+			Type: events.InputBuyProperty,
+			Payload: events.LandedOnUnownedPropertyPayload{
 				PlayerName: player.GetName(),
-				Owner:      street.GetOwner().GetName(),
 				TileName:   street.GetName(),
-				Amount:     rent,
-			},
+				Price:      street.GetPrice()},
 		})
-
+		return
 	}
 
-	if !street.IsOwned() && player.CanAfford(street.GetPrice()) {
-		if inputhandler.PlayerWantsToBuyProperty(player.GetName(), street.GetName(), street.GetPrice()) {
-			street.SetOwner(player)
-			player.Pay(street.GetPrice())
-
-			fmt.Println(player.GetName(), "bought", street.GetName(), "for", street.GetPrice())
-
-			eventList = append(eventList, events.GameEvent{
-				Type: events.EventLandedOnUnownedProperty,
-				Payload: events.LandedOnUnownedPropertyPayload{
-					PlayerName: player.GetName(),
-					TileName:   street.GetName(),
-					Amount:     street.GetPrice(),
-				},
-			})
-
-			eventList = append(eventList, events.GameEvent{
-				Type: events.EventBoughtProperty,
-				Payload: events.BoughtPropertyPayload{
-					PlayerName: player.GetName(),
-					TileName:   street.GetName(),
-					Amount:     street.GetPrice(),
-				},
-			})
-		} else {
-			eventList = append(eventList, events.GameEvent{
-				Type: events.EventDeclinedBuy,
-				Payload: events.DeclinedBuyPayload{
-					PlayerName: player.GetName(),
-					TileName:   street.GetName(),
-					Amount:     street.GetPrice(),
-				},
-			})
-
-		}
+	if street.GetOwner() == player {
+		return
 	}
-	return eventList
+
+	rent := street.GetRent(tiles, dice)
+
+	player.PayRent(street.GetOwner(), rent)
+
+	bus.Publish(events.GameEvent{
+		Type: events.PaidRent,
+		Payload: events.PaidRentPayload{
+			PlayerName: player.GetName(),
+			TileName:   street.GetName(),
+			Owner:      street.GetOwner().GetName(),
+			Rent:       rent,
+		},
+	})
 }
 
 func (street *Street) GetPrice() int {
 	return street.buyPrice
 }
 
-func (street *Street) GetRent(tiles []Tile, dice []int) int {
+func (street *Street) GetRent(tiles []common.Tile, dice []int) int {
 	var rent = street.rent
 
 	if street.GetHouseAmount() > 0 {
@@ -118,7 +95,7 @@ func (street *Street) IsOwned() bool {
 	}
 }
 
-func NewStreetTile(buyPrice int, housePrice int, priceIncreasePerHouse []int, color string, rent int, mortgageValue int, hotelRent int, name string, position int) Tile {
+func NewStreetTile(buyPrice int, housePrice int, priceIncreasePerHouse []int, color string, rent int, mortgageValue int, hotelRent int, name string, position int) common.Tile {
 	return &Street{
 		PropertyTile: PropertyTile{
 			BaseTile: BaseTile{
