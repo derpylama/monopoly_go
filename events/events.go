@@ -3,6 +3,8 @@ package events
 type EventType string
 
 const (
+	StartTurn               EventType = "start_turn"
+	EndTurn                 EventType = "end_turn"
 	PaidRent                EventType = "paid_rent"
 	BoughtProperty          EventType = "bought_property"
 	DeclinedBuy             EventType = "declined_buy"
@@ -31,6 +33,10 @@ const (
 	InputPromptGameStart   EventType = "prompt_game_start"
 	InputPromptRollDice    EventType = "prompt_roll_dice"
 	InputPromptBuyProperty EventType = "prompt_buy_property"
+	InputPromptOptions     EventType = "prompt_options"
+
+	CantAfford  EventType = "cant_afford"
+	UpdateMoney EventType = "update_money"
 )
 
 type GameEvent struct {
@@ -39,11 +45,25 @@ type GameEvent struct {
 }
 
 type PaidRentPayload struct {
+	PlayerName  string
+	Owner       string
+	TileName    string
+	Rent        int
+	PlayerMoney int
+}
+
+type UpdateMoneyPayload struct {
 	PlayerName string
-	Owner      string
-	TileName   string
-	Rent       int
-	Details    string
+	Money      int
+}
+
+type StartTurnPayload struct {
+	PlayerName string
+	Money      int
+}
+
+type PromptRollDicePayload struct {
+	PlayerName string
 }
 
 type BoughtPropertyPayload struct {
@@ -116,7 +136,20 @@ type LandedOnCommunityChestPayload struct {
 }
 
 type TaxPayload struct {
+	PlayerName  string
+	TileName    string
+	TaxAmount   int
+	PlayerMoney int
+}
+
+type InputPromptPayload struct {
 	PlayerName string
 	TileName   string
-	TaxAmount  int
+	Options    []any
+}
+
+type CantAffordPayload struct {
+	Playername string
+	TileName   string
+	Price      int
 }

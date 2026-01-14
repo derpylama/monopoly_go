@@ -1,37 +1,43 @@
 package main
 
 import (
+	"flag"
 	"monopoly/events"
 	"monopoly/game"
 	"monopoly/logger"
+	"monopoly/view"
 )
 
 func main() {
+	uiPtr := flag.String("ui", "console", "Type of UI to use: console or gui")
+	flag.Parse()
 
-	// players := []*player.Player{player.NewPlayer(1500, "player1"), player.NewPlayer(1500, "player2")}
-	// board := board.NewBoard()
-	// dice := dice.NewDice(2, 6)
+	if *uiPtr != "console" && *uiPtr != "gui" {
+		panic("Invalid UI type. Use 'console' or 'gui'.")
+	}
 
 	bus := events.NewBus()
-	commandChannel := make(chan game.GameCommand)
-	game := game.NewGame(bus)
+	commandChannel := make(chan game.GameCommand, 10)
 
-	// 1️⃣ Create logger
-	log := logger.New(true)
+	g := game.NewGame(bus)
 
-	go game.StartGame()
+	g.RegisterListeners(commandChannel)
+	g.RegisterPromptListeners(commandChannel)
+	if *uiPtr == "console" {
+		log := logger.New(true)
 
-	logger.RegisterListeners(bus, log)
-	logger.RegisterPromptListeners(bus, commandChannel)
+		logger.RegisterListeners(bus, log)
+		logger.RegisterPromptListeners(bus, commandChannel)
 
-	go func() {
-		for cmd := range commandChannel {
-			game.Handle(cmd)
-		}
-	}()
+		// Start command proccesing goroutine
+		go func() {
+			for cmd := range commandChannel {
+				g.Handle(cmd)
+			}
+		}()
+		g.StartGame()
 
-	// mainContext := app.New()
-	// mainWindow := mainContext.NewWindow("Monopoly")
-	// mainWindow.ShowAndRun()
-	game.StartGame()
+	}
+
+	view.StartGUI(&g, bus, commandChannel)
 }

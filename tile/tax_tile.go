@@ -49,9 +49,10 @@ func (taxTile *TaxTile) OnLand(player *player.Player, tiles []common.Tile, dice 
 	bus.Publish(events.GameEvent{
 		Type: events.PaidTax,
 		Payload: events.TaxPayload{
-			PlayerName: player.GetName(),
-			TileName:   taxTile.GetName(),
-			TaxAmount:  taxTile.getTax(),
+			PlayerName:  player.GetName(),
+			TileName:    taxTile.GetName(),
+			TaxAmount:   taxTile.getTax(),
+			PlayerMoney: player.GetMoney(),
 		},
 	})
 }

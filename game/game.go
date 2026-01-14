@@ -40,10 +40,15 @@ func NewGame(bus *events.Bus) Game {
 }
 
 func (game *Game) StartGame() {
-	for !game.gameOver {
-		game.takeTurn()
-		game.nextPlayer()
-	}
+	// game.takeTurn()
+	// Start the first turn by publishing StartTurn for player 0
+	game.bus.Publish(events.GameEvent{
+		Type: events.StartTurn,
+		Payload: events.StartTurnPayload{
+			PlayerName: game.players[game.currentPlayer].GetName(),
+			Money:      game.getPlayer().GetMoney(),
+		},
+	})
 
 }
 
@@ -57,106 +62,28 @@ func (game *Game) AddPlayer() {
 }
 
 func (game *Game) takeTurn() {
-	currentPlayer := game.players[game.currentPlayer]
+	currentPlayer := game.getPlayer()
 
 	game.bus.Publish(events.GameEvent{
-		Type: events.InputPromptRollDice,
-		Payload: events.RolledDicePayload{
+		Type: events.StartTurn,
+		Payload: events.StartTurnPayload{
 			PlayerName: currentPlayer.GetName(),
+			Money:      currentPlayer.GetMoney(),
 		},
 	})
 
-	//logger.LogOnLandInfo(events.GameEvent{PlayerName: currentPlayer.GetName(), TileName: landedOnTile.GetName(), Details: currentPlayer.GetName() + " landed on " + landedOnTile.GetName()})
-
-	// for !turnIsOver {
-	// 	input := inputhandler.PlayerTurnInteraction(currentPlayer.GetName())
-	// 	switch input {
-	// 	case "end":
-	// 		if hasRolled {
-	// 			turnIsOver = true
-
-	// 		} else {
-	// 			fmt.Println("You must roll the dice before ending your turn.")
-	// 		}
-
-	// 	case "trade":
-	// 		// Trade logic here
-	// 		fmt.Println("Trade feature is not implemented yet.")
-
-	// 	case "mortgage":
-	// 		// Mortgage logic here
-	// 		fmt.Println("Mortgage feature is not implemented yet.")
-
-	// 	case "unmortgage":
-	// 		// Unmortgage logic here
-	// 		fmt.Println("Unmortgage feature is not implemented yet.")
-
-	// 	case "build":
-	// 		// Build logic here
-	// 		properties := GetPlayersProperties(currentPlayer, game.board.Tiles())
-
-	// 		var propertyNames []string
-
-	// 		for _, property := range properties {
-	// 			propertyNames = append(propertyNames, property.GetName())
-	// 		}
-
-	// 		if len(properties) == 0 {
-	// 			fmt.Println("You do not own any properties to build on.")
-	// 		} else {
-	// 			logger.LogOwnedProperties(currentPlayer.GetName(), propertyNames)
-
-	// 			streetToBuildOn := inputhandler.PlayerEnterNumber("Enter the number of the property you want to build a house on:")
-
-	// 			street, ok := properties[streetToBuildOn].(*tile.Street)
-	// 			if !ok {
-	// 				fmt.Println("You can only build houses on street properties.")
-	// 				continue
-	// 			}
-	// 			if inputhandler.PlayerWantsToBuildHouse(currentPlayer.GetName(), street.GetName(), street.GetHousePrice()) {
-	// 				if currentPlayer.Pay(street.GetHousePrice()) {
-	// 					street.BuyHouse()
-	// 					fmt.Println("Built a house on", street.GetName())
-	// 				} else {
-	// 					fmt.Println("You cannot afford to build a house on", street.GetName())
-	// 				}
-	// 			}
-	// 		}
-
-	// 	case "list":
-	// 		properties := GetPlayersProperties(currentPlayer, game.board.Tiles())
-	// 		var propertyNames []string
-
-	// 		for _, property := range properties {
-	// 			propertyNames = append(propertyNames, property.GetName())
-	// 		}
-	// 		logger.LogOwnedProperties(currentPlayer.GetName(), propertyNames)
-	// 	case "roll":
-	// 		if !hasRolled {
-	// 			roll := game.dice.ThrowDice()
-	// 			currentPlayer.Move(roll)
-	// 			hasRolled = true
-
-	// 			landedOnTile = game.board.GetTile(currentPlayer.GetPosition())
-
-	// 			//logger.LogOnLandInfo(events.GameEvent{PlayerName: currentPlayer.GetName(), TileName: landedOnTile.GetName(), Details: currentPlayer.GetName() + " landed on " + landedOnTile.GetName()})
-	// 			eventList := landedOnTile.OnLand(currentPlayer, game.board.Tiles(), roll)
-	// 			logger.LogEvent(eventList)
-	// 		} else if hasRolled {
-	// 			fmt.Println("You have already rolled the dice this turn.")
-	// 		} else {
-
-	// 			fmt.Println("You are in Jail! You cannot roll the dice.")
-	// 		}
-	// 	default:
-	// 		fmt.Println("Invalid input, please try again.")
-	// 	}
-	// }
-
+	game.bus.Publish(events.GameEvent{
+		Type: events.InputPromptOptions,
+		Payload: events.InputPromptPayload{
+			PlayerName: currentPlayer.GetName(),
+			Options:    []any{GameCommand{Type: CmdEndTurn, PlayerName: currentPlayer.GetName()}, GameCommand{Type: CmdRollDice, PlayerName: currentPlayer.GetName()}},
+		},
+	})
 }
 
-func (game *Game) nextPlayer() {
+func (game *Game) nextTurn() {
 	game.currentPlayer = (game.currentPlayer + 1) % len(game.players)
+	game.takeTurn()
 }
 
 func (game *Game) getPlayer() *player.Player {
@@ -220,10 +147,23 @@ func GetPlayersProperties(player *player.Player, tiles []common.Tile) []common.T
 func (game *Game) Handle(cmd GameCommand) {
 	player := game.getPlayer()
 
+	println("Handling command:", cmd.Type, "for player:", player.GetName())
+
 	switch cmd.Type {
 
 	case CmdRollDice:
 		game.handleRollDice(player)
+
+	case CmdEndTurn:
+		game.nextTurn()
+
+	case CmdBuyProperty:
+		fmt.Println("player: " + player.GetName() + "bought " + cmd.TileName)
+		game.handleBuyProperty(player, cmd.TileName)
+
+	default:
+		println("Unknown command type:", string(cmd.Type))
+
 	}
 
 }
@@ -251,8 +191,62 @@ func (game *Game) handleRollDice(player *player.Player) {
 	})
 
 	landedOnTile.OnLand(player, game.board.Tiles(), roll, game.Bus())
+
+	game.bus.Publish(events.GameEvent{
+		Type: events.InputPromptOptions,
+		Payload: events.InputPromptPayload{
+			PlayerName: player.GetName(),
+			Options:    []any{GameCommand{Type: CmdEndTurn, PlayerName: player.GetName()}, GameCommand{Type: CmdRollDice, PlayerName: player.GetName()}},
+		},
+	})
+}
+
+func (game *Game) handleBuyProperty(player *player.Player, tileName string) {
+	boughtTile, ok := game.board.GetTileByName(tileName)
+
+	if ok {
+		property := boughtTile.(tile.Property)
+		property.BuyProperty(player, game.bus)
+
+		game.bus.Publish(events.GameEvent{
+			Type: events.UpdateMoney,
+			Payload: events.UpdateMoneyPayload{
+				PlayerName: player.GetName(),
+				Money:      player.GetMoney(),
+			},
+		})
+	} else {
+		game.bus.Publish(events.GameEvent{
+			Type: events.InputPromptOptions,
+			Payload: events.InputPromptPayload{
+				PlayerName: player.GetName(),
+				Options:    []any{GameCommand{Type: CmdEndTurn, PlayerName: player.GetName()}, GameCommand{Type: CmdRollDice, PlayerName: player.GetName()}},
+			},
+		})
+	}
 }
 
 func (g *Game) Bus() *events.Bus {
 	return g.bus
+}
+
+func PlayerOwnsColorSet(player *player.Player, color tile.Color, board *board.Board) bool {
+	for _, t := range board.Tiles() {
+		street, ok := t.(*tile.Street)
+		if !ok {
+			continue
+		}
+
+		if street.GetColor() == color {
+			if street.GetOwner() != player {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+func GetPlayerOptions() {
+
 }

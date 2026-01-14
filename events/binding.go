@@ -1,6 +1,9 @@
 package events
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 // Type represents an event type (paid_rent, rolled_dice, etc.)
 type Type string
@@ -40,6 +43,8 @@ func (b *Bus) Publish(e GameEvent) {
 	b.mu.RLock()
 	listeners := b.listeners[e.Type]
 	b.mu.RUnlock()
+
+	fmt.Println("DEBUG: Publishing event:", e.Type, "to", len(listeners), "listeners")
 
 	for _, l := range listeners {
 		l(e)

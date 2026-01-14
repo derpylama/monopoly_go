@@ -7,12 +7,25 @@ import (
 	"monopoly/player"
 )
 
+type Color string
+
+const (
+	Brown     Color = "Brown"
+	LightBlue Color = "Light Blue"
+	Pink      Color = "Pink"
+	Orange    Color = "Orange"
+	Red       Color = "Red"
+	Yellow    Color = "Yellow"
+	Green     Color = "Green"
+	DarkBlue  Color = "Dark Blue"
+)
+
 type Street struct {
 	PropertyTile
 	housePrice            int
 	houses                int
 	priceIncreasePerHouse []int
-	color                 string
+	color                 Color
 	hotelOwned            bool
 	hotelRent             int
 }
@@ -37,7 +50,7 @@ func (street *Street) OnLand(player *player.Player, tiles []common.Tile, dice []
 
 	if !street.IsOwned() {
 		bus.Publish(events.GameEvent{
-			Type: events.InputBuyProperty,
+			Type: events.LandedOnUnownedProperty,
 			Payload: events.LandedOnUnownedPropertyPayload{
 				PlayerName: player.GetName(),
 				TileName:   street.GetName(),
@@ -95,7 +108,38 @@ func (street *Street) IsOwned() bool {
 	}
 }
 
-func NewStreetTile(buyPrice int, housePrice int, priceIncreasePerHouse []int, color string, rent int, mortgageValue int, hotelRent int, name string, position int) common.Tile {
+func (street *Street) GetColor() Color {
+	return street.color
+}
+
+func (street *Street) BuyProperty(player *player.Player, bus *events.Bus) {
+	street.SetOwner(player)
+
+	if player.CanAfford(street.GetPrice()) {
+		player.Pay(street.GetPrice())
+
+		bus.Publish(events.GameEvent{
+			Type: events.BoughtProperty,
+			Payload: events.BoughtPropertyPayload{
+				PlayerName: player.GetName(),
+				TileName:   street.GetName(),
+				Price:      street.GetPrice(),
+			},
+		})
+	} else {
+		bus.Publish(events.GameEvent{
+			Type: events.CantAfford,
+			Payload: events.CantAffordPayload{
+				Playername: player.GetName(),
+				TileName:   street.GetName(),
+				Price:      street.GetPrice(),
+			},
+		})
+	}
+
+}
+
+func NewStreetTile(buyPrice int, housePrice int, priceIncreasePerHouse []int, color Color, rent int, mortgageValue int, hotelRent int, name string, position int) Property {
 	return &Street{
 		PropertyTile: PropertyTile{
 			BaseTile: BaseTile{

@@ -15,12 +15,13 @@ func RegisterListeners(bus *events.Bus, l *Logger) {
 	})
 
 	bus.Subscribe(events.RolledDice, func(e events.GameEvent) {
+
 		p := e.Payload.(events.RolledDicePayload)
+		fmt.Println("DEBUG: RolledDice received")
 		l.log(
 			p.PlayerName +
-				" rolled " +
-				fmt.Sprintf("%d + %d", p.Dice[0], p.Dice[1]),
-		)
+				" rolled " + strconv.Itoa(p.Dice[0]) + " and " + strconv.Itoa(p.Dice[1]))
+
 	})
 
 	bus.Subscribe(events.PaidRent, func(e events.GameEvent) {
@@ -46,26 +47,22 @@ func RegisterListeners(bus *events.Bus, l *Logger) {
 				p.TileName,
 		)
 	})
+
+	// bus.Subscribe(events.InputPromptOptions, func(e events.GameEvent) {
+	// 	p := e.Payload.(events.InputPromptPayload)
+	// 	l.log("Prompting " + p.PlayerName + " for all inputs")
+	// 	for _, Options := range p.Options {
+	// 		l.log("- " + Options)
+	// 	}
+
+	// })
+
+	bus.Subscribe(events.StartTurn, func(e events.GameEvent) {
+		p := e.Payload.(events.StartTurnPayload)
+		l.log("It's now " + p.PlayerName + "'s turn!")
+	})
 }
 
-func RegisterPromptListeners(
-	bus *events.Bus,
-	commandChan chan<- game.GameCommand,
-) {
+func RegisterPromptListeners(bus *events.Bus, commandChan chan<- game.GameCommand) {
 
-	bus.Subscribe(events.InputPromptRollDice, func(e events.GameEvent) {
-		p := e.Payload.(events.RolledDicePayload)
-
-		fmt.Printf("%s, type 'roll' to roll the dice: ", p.PlayerName)
-
-		var input string
-		fmt.Scanln(&input)
-
-		if input == "roll" {
-			commandChan <- game.GameCommand{
-				Type:       game.CmdRollDice,
-				PlayerName: p.PlayerName,
-			}
-		}
-	})
 }
