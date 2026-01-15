@@ -1,7 +1,8 @@
 package view
 
 import (
-	"monopoly/events"
+	"image/color"
+	"monopoly/common"
 	"monopoly/game"
 
 	"fyne.io/fyne/v2"
@@ -12,7 +13,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-func StartGUI(g *game.Game, bus *events.Bus, commandChan chan game.GameCommand) {
+func StartGUI(g *game.Game, bus *common.Bus, commandChan chan game.GameCommand) {
 	appContext := app.New()
 	mainWindow := appContext.NewWindow("Monopoly")
 
@@ -35,10 +36,12 @@ func StartGUI(g *game.Game, bus *events.Bus, commandChan chan game.GameCommand) 
 	monopolyBoard.SetMinSize(fyne.NewSize(600, 600))
 
 	logArea := widget.NewMultiLineEntry()
+	logArea.SetMinRowsVisible(20)
 
 	playerLabel := widget.NewLabel("player")
 
 	buttons := container.NewVBox()
+	propertiesCon := container.NewVBox()
 
 	leftPanel := container.NewVBox(
 		playerLabel,
@@ -46,7 +49,13 @@ func StartGUI(g *game.Game, bus *events.Bus, commandChan chan game.GameCommand) 
 		logArea,
 	)
 
-	windowGrid := container.New(layout.NewHBoxLayout(), leftPanel, container.NewStack(monopolyBoard, houseCon), layout.NewSpacer())
+	// Invisible sizing object
+	minSizer := canvas.NewRectangle(color.Transparent)
+	minSizer.SetMinSize(fyne.NewSize(300, 0)) // min width = 300px
+
+	leftPanelWrapper := container.NewStack(minSizer, leftPanel)
+
+	windowGrid := container.New(layout.NewHBoxLayout(), leftPanelWrapper, propertiesCon, container.NewStack(monopolyBoard, houseCon), layout.NewSpacer())
 
 	mainWindow.Resize(fyne.NewSize(1200, 800))
 	mainWindow.SetContent(windowGrid)
@@ -54,7 +63,7 @@ func StartGUI(g *game.Game, bus *events.Bus, commandChan chan game.GameCommand) 
 	// Run the GUI
 
 	// GUI branch later
-	RegisterReactiveGUIListeners(bus, g, commandChan, logArea, buttons, playerLabel, mainWindow)
+	RegisterReactiveGUIListeners(bus, g, commandChan, logArea, buttons, playerLabel, propertiesCon, mainWindow)
 
 	// Start command proccesing goroutine
 	go func() {

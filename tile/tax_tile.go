@@ -29,14 +29,14 @@ func (taxTile *TaxTile) GetName() string {
 	return taxTile.Name
 }
 
-func (taxTile *TaxTile) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *events.Bus) {
+func (taxTile *TaxTile) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *common.Bus) {
 	playerMoney := player.GetMoney()
 	playerMoney -= taxTile.getTax()
 
 	player.SetMoney(playerMoney)
 
-	bus.Publish(events.GameEvent{
-		Type: events.LandedOnTax,
+	bus.Publish(common.GameEvent{
+		Type: common.LandedOnTax,
 		Payload: events.TaxPayload{
 			PlayerName: player.GetName(),
 			TileName:   taxTile.GetName(),
@@ -46,8 +46,8 @@ func (taxTile *TaxTile) OnLand(player *player.Player, tiles []common.Tile, dice 
 
 	player.Pay(taxTile.getTax())
 
-	bus.Publish(events.GameEvent{
-		Type: events.PaidTax,
+	bus.Publish(common.GameEvent{
+		Type: common.PaidTax,
 		Payload: events.TaxPayload{
 			PlayerName:  player.GetName(),
 			TileName:    taxTile.GetName(),

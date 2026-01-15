@@ -18,10 +18,10 @@ type Game struct {
 	dice          *dice.Dice
 
 	//contains all events that occur during the game
-	bus *events.Bus
+	bus *common.Bus
 }
 
-func NewGame(bus *events.Bus) Game {
+func NewGame(bus *common.Bus) Game {
 	// When a new game is created all players, board and dice should be initialized
 
 	players := []*player.Player{player.NewPlayer(1500, "Player 1"), player.NewPlayer(1500, "Player 2")}
@@ -42,8 +42,8 @@ func NewGame(bus *events.Bus) Game {
 func (game *Game) StartGame() {
 	// game.takeTurn()
 	// Start the first turn by publishing StartTurn for player 0
-	game.bus.Publish(events.GameEvent{
-		Type: events.StartTurn,
+	game.bus.Publish(common.GameEvent{
+		Type: common.StartTurn,
 		Payload: events.StartTurnPayload{
 			PlayerName: game.players[game.currentPlayer].GetName(),
 			Money:      game.getPlayer().GetMoney(),
@@ -64,16 +64,17 @@ func (game *Game) AddPlayer() {
 func (game *Game) takeTurn() {
 	currentPlayer := game.getPlayer()
 
-	game.bus.Publish(events.GameEvent{
-		Type: events.StartTurn,
+	game.bus.Publish(common.GameEvent{
+		Type: common.StartTurn,
 		Payload: events.StartTurnPayload{
-			PlayerName: currentPlayer.GetName(),
-			Money:      currentPlayer.GetMoney(),
+			PlayerName:      currentPlayer.GetName(),
+			Money:           currentPlayer.GetMoney(),
+			OwnedProperties: GetPlayersProperties(currentPlayer, game.board.Tiles()),
 		},
 	})
 
-	game.bus.Publish(events.GameEvent{
-		Type: events.InputPromptOptions,
+	game.bus.Publish(common.GameEvent{
+		Type: common.InputPromptOptions,
 		Payload: events.InputPromptPayload{
 			PlayerName: currentPlayer.GetName(),
 			Options:    []any{GameCommand{Type: CmdEndTurn, PlayerName: currentPlayer.GetName()}, GameCommand{Type: CmdRollDice, PlayerName: currentPlayer.GetName()}},
@@ -172,8 +173,12 @@ func (game *Game) handleRollDice(player *player.Player) {
 	roll := game.dice.ThrowDice()
 	player.Move(roll)
 
-	game.bus.Publish(events.GameEvent{
-		Type: events.RolledDice,
+	//pos, _ := common.GetTilePosByName("Jail", game.board.Tiles())
+
+	//player.Teleport(pos)
+
+	game.bus.Publish(common.GameEvent{
+		Type: common.RolledDice,
 		Payload: events.RolledDicePayload{
 			PlayerName: player.GetName(),
 			Dice:       roll,
@@ -182,8 +187,8 @@ func (game *Game) handleRollDice(player *player.Player) {
 
 	landedOnTile := game.board.GetTile(player.GetPosition())
 
-	game.bus.Publish(events.GameEvent{
-		Type: events.LandedOnTile,
+	game.bus.Publish(common.GameEvent{
+		Type: common.LandedOnTile,
 		Payload: events.LandedOnTilePayload{
 			PlayerName: player.GetName(),
 			TileName:   landedOnTile.GetName(),
@@ -192,8 +197,8 @@ func (game *Game) handleRollDice(player *player.Player) {
 
 	landedOnTile.OnLand(player, game.board.Tiles(), roll, game.Bus())
 
-	game.bus.Publish(events.GameEvent{
-		Type: events.InputPromptOptions,
+	game.bus.Publish(common.GameEvent{
+		Type: common.InputPromptOptions,
 		Payload: events.InputPromptPayload{
 			PlayerName: player.GetName(),
 			Options:    []any{GameCommand{Type: CmdEndTurn, PlayerName: player.GetName()}, GameCommand{Type: CmdRollDice, PlayerName: player.GetName()}},
@@ -208,16 +213,16 @@ func (game *Game) handleBuyProperty(player *player.Player, tileName string) {
 		property := boughtTile.(tile.Property)
 		property.BuyProperty(player, game.bus)
 
-		game.bus.Publish(events.GameEvent{
-			Type: events.UpdateMoney,
+		game.bus.Publish(common.GameEvent{
+			Type: common.UpdateMoney,
 			Payload: events.UpdateMoneyPayload{
 				PlayerName: player.GetName(),
 				Money:      player.GetMoney(),
 			},
 		})
 	} else {
-		game.bus.Publish(events.GameEvent{
-			Type: events.InputPromptOptions,
+		game.bus.Publish(common.GameEvent{
+			Type: common.InputPromptOptions,
 			Payload: events.InputPromptPayload{
 				PlayerName: player.GetName(),
 				Options:    []any{GameCommand{Type: CmdEndTurn, PlayerName: player.GetName()}, GameCommand{Type: CmdRollDice, PlayerName: player.GetName()}},
@@ -226,7 +231,7 @@ func (game *Game) handleBuyProperty(player *player.Player, tileName string) {
 	}
 }
 
-func (g *Game) Bus() *events.Bus {
+func (g *Game) Bus() *common.Bus {
 	return g.bus
 }
 
@@ -247,6 +252,6 @@ func PlayerOwnsColorSet(player *player.Player, color tile.Color, board *board.Bo
 	return true
 }
 
-func GetPlayerOptions() {
+func GetPlayerOptions(player *player.Player) {
 
 }

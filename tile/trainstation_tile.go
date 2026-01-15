@@ -11,7 +11,7 @@ type TrainStation struct {
 	rentPerStation int
 }
 
-func NewTrainStation(buyPrice int, mortgageValue int, name string, position int, rentPerStation int) common.Tile {
+func NewTrainStation(buyPrice int, mortgageValue int, name string, position int, rentPerStation int) Property {
 	return &TrainStation{
 		PropertyTile: PropertyTile{
 			BaseTile: BaseTile{
@@ -33,6 +33,40 @@ func (trainStation *TrainStation) IsOwned() bool {
 	}
 }
 
+func (trainStation *TrainStation) BuyProperty(player *player.Player, bus *common.Bus) {
+	if player.CanAfford(trainStation.GetPrice()) {
+		trainStation.SetOwner(player)
+		player.Pay(trainStation.GetPrice())
+
+		bus.Publish(common.GameEvent{
+			Type: common.BoughtProperty,
+			Payload: events.BoughtPropertyPayload{
+				PlayerName: player.GetName(),
+				TileName:   trainStation.GetName(),
+				Price:      trainStation.GetPrice(),
+			},
+		})
+
+		bus.Publish(common.GameEvent{
+			Type: common.UpdateMoney,
+			Payload: events.UpdateMoneyPayload{
+				PlayerName: player.GetName(),
+				Money:      player.GetMoney(),
+			},
+		})
+	} else {
+		bus.Publish(common.GameEvent{
+			Type: common.CantAfford,
+			Payload: events.CantAffordPayload{
+				Playername: player.GetName(),
+				TileName:   trainStation.GetName(),
+				Price:      trainStation.GetPrice(),
+			},
+		})
+	}
+
+}
+
 func (trainStation *TrainStation) GetName() string {
 	return trainStation.Name
 }
@@ -41,8 +75,31 @@ func (trainStation *TrainStation) GetPosition() int {
 	return trainStation.Position
 }
 
-func (trainStation *TrainStation) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *events.Bus) {
+func (trainStation *TrainStation) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *common.Bus) {
+	if trainStation.IsOwned() {
+		if trainStation.GetOwner() != player {
+			rent := trainStation.GetRent(tiles, dice)
+			bus.Publish(common.GameEvent{
+				Type: common.PaidRent,
+				Payload: events.PaidRentPayload{
+					PlayerName: player.GetName(),
+					Owner:      trainStation.GetOwner().GetName(),
+					TileName:   trainStation.GetName(),
+					Rent:       rent,
+				},
+			})
+		}
+	} else {
+		bus.Publish(common.GameEvent{
+			Type: common.LandedOnUnownedProperty,
+			Payload: events.LandedOnUnownedPropertyPayload{
+				PlayerName: player.GetName(),
+				TileName:   trainStation.GetName(),
+				Price:      trainStation.GetPrice(),
+			},
+		})
 
+	}
 }
 
 func (trainStation *TrainStation) GetPrice() int {

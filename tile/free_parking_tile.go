@@ -27,9 +27,9 @@ func (freeParking *FreeParking) GetPosition() int {
 	return freeParking.Position
 }
 
-func (freeParking *FreeParking) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *events.Bus) {
-	bus.Publish(events.GameEvent{
-		Type: events.LandedOnFreeParking,
+func (freeParking *FreeParking) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *common.Bus) {
+	bus.Publish(common.GameEvent{
+		Type: common.LandedOnFreeParking,
 		Payload: events.LandedOnFreeParkingPayload{
 			PlayerName: player.GetName(),
 		},

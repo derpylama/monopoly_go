@@ -23,9 +23,9 @@ func (goTile *JailTile) GetPosition() int {
 	return goTile.tile.Position
 }
 
-func (goTile *JailTile) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *events.Bus) {
-	bus.Publish(events.GameEvent{
-		Type: events.LandedOnJail,
+func (goTile *JailTile) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *common.Bus) {
+	bus.Publish(common.GameEvent{
+		Type: common.LandedOnJail,
 		Payload: events.LandedOnJailPayload{
 			PlayerName: player.GetName(),
 			TileName:   goTile.GetName(),

@@ -20,9 +20,9 @@ func (communityChest *CommunityChest) GetPosition() int {
 	return communityChest.tile.Position
 }
 
-func (communityChest *CommunityChest) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *events.Bus) {
-	bus.Publish(events.GameEvent{
-		Type: events.LandedOnTile,
+func (communityChest *CommunityChest) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *common.Bus) {
+	bus.Publish(common.GameEvent{
+		Type: common.LandedOnTile,
 		Payload: events.LandedOnTilePayload{
 			PlayerName: player.GetName(),
 			TileName:   communityChest.GetName(),

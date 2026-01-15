@@ -1,48 +1,8 @@
 package events
 
-type EventType string
-
-const (
-	StartTurn               EventType = "start_turn"
-	EndTurn                 EventType = "end_turn"
-	PaidRent                EventType = "paid_rent"
-	BoughtProperty          EventType = "bought_property"
-	DeclinedBuy             EventType = "declined_buy"
-	BoughtHouse             EventType = "bought_house"
-	LandedOnGo              EventType = "landed_on_go"
-	PaidTax                 EventType = "paid_tax"
-	LandedOnTile            EventType = "landed_on_tile"
-	LandedOnUnownedProperty EventType = "landed_on_unowned_property"
-	LandedOnOwnProperty     EventType = "landed_on_own_property"
-	LandedOnFreeParking     EventType = "landed_on_free_parking"
-	LandedOnGoToJail        EventType = "landed_on_go_to_jail"
-	LandedOnJail            EventType = "landed_on_jail"
-	LandedOnChance          EventType = "landed_on_chance"
-	LandedOnCommunityChest  EventType = "landed_on_community_chest"
-	LandedOnTax             EventType = "landed_on_tax"
-	RolledDice              EventType = "rolled_dice"
-	LandedOnStreet          EventType = "landed_on_street"
-
-	InputBuyProperty       EventType = "buy_property"
-	InputDeclineBuy        EventType = "decline_buy"
-	InputBuyHouse          EventType = "buy_house"
-	InputDeclineBuyHouse   EventType = "decline_buy_house"
-	InputRollDice          EventType = "roll_dice"
-	InputEndTurn           EventType = "end_turn"
-	InputPromptNewPlayer   EventType = "prompt_new_player"
-	InputPromptGameStart   EventType = "prompt_game_start"
-	InputPromptRollDice    EventType = "prompt_roll_dice"
-	InputPromptBuyProperty EventType = "prompt_buy_property"
-	InputPromptOptions     EventType = "prompt_options"
-
-	CantAfford  EventType = "cant_afford"
-	UpdateMoney EventType = "update_money"
+import (
+	"monopoly/common"
 )
-
-type GameEvent struct {
-	Type    EventType
-	Payload any
-}
 
 type PaidRentPayload struct {
 	PlayerName  string
@@ -58,8 +18,10 @@ type UpdateMoneyPayload struct {
 }
 
 type StartTurnPayload struct {
-	PlayerName string
-	Money      int
+	PlayerName      string
+	Money           int
+	OwnedProperties []common.Tile
+	Color           string
 }
 
 type PromptRollDicePayload struct {
@@ -70,7 +32,6 @@ type BoughtPropertyPayload struct {
 	PlayerName string
 	TileName   string
 	Price      int
-	Details    string
 }
 
 type DeclinedBuyPayload struct {

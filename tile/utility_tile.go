@@ -12,7 +12,7 @@ type Utility struct {
 	monopolyMultiplier int
 }
 
-func NewUtilityTile(buyPrice int, name string, mortgageValue int, baseMultiplier int, monopolyMultiplier int, position int) common.Tile {
+func NewUtilityTile(buyPrice int, name string, mortgageValue int, baseMultiplier int, monopolyMultiplier int, position int) Property {
 	return &Utility{
 		PropertyTile: PropertyTile{
 			buyPrice:      buyPrice,
@@ -27,6 +27,39 @@ func NewUtilityTile(buyPrice int, name string, mortgageValue int, baseMultiplier
 	}
 }
 
+func (utility *Utility) BuyProperty(player *player.Player, bus *common.Bus) {
+	if player.CanAfford(utility.GetPrice()) {
+		utility.SetOwner(player)
+		player.Pay(utility.GetPrice())
+
+		bus.Publish(common.GameEvent{
+			Type: common.BoughtProperty,
+			Payload: events.BoughtPropertyPayload{
+				PlayerName: player.GetName(),
+				TileName:   utility.GetName(),
+				Price:      utility.GetPrice(),
+			},
+		})
+
+		bus.Publish(common.GameEvent{
+			Type: common.UpdateMoney,
+			Payload: events.UpdateMoneyPayload{
+				PlayerName: player.GetName(),
+				Money:      player.GetMoney(),
+			},
+		})
+	} else {
+		bus.Publish(common.GameEvent{
+			Type: common.CantAfford,
+			Payload: events.CantAffordPayload{
+				Playername: player.GetName(),
+				TileName:   utility.GetName(),
+				Price:      utility.GetPrice(),
+			},
+		})
+	}
+}
+
 func (utility *Utility) GetName() string {
 	return utility.Name
 }
@@ -35,12 +68,12 @@ func (utility *Utility) GetPosition() int {
 	return utility.Position
 }
 
-func (utility *Utility) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *events.Bus) {
+func (utility *Utility) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *common.Bus) {
 	if utility.IsOwned() {
 		if utility.GetOwner() != player {
 			rent := utility.GetRent(tiles, dice)
-			bus.Publish(events.GameEvent{
-				Type: events.PaidRent,
+			bus.Publish(common.GameEvent{
+				Type: common.PaidRent,
 				Payload: events.PaidRentPayload{
 					PlayerName: player.GetName(),
 					Owner:      utility.GetOwner().GetName(),
@@ -50,8 +83,8 @@ func (utility *Utility) OnLand(player *player.Player, tiles []common.Tile, dice 
 			})
 		}
 	} else {
-		bus.Publish(events.GameEvent{
-			Type: events.LandedOnUnownedProperty,
+		bus.Publish(common.GameEvent{
+			Type: common.LandedOnUnownedProperty,
 			Payload: events.LandedOnUnownedPropertyPayload{
 				PlayerName: player.GetName(),
 				TileName:   utility.GetName(),

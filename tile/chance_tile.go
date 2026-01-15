@@ -20,15 +20,19 @@ func (chanceTile *ChanceTile) GetPosition() int {
 	return chanceTile.Position
 }
 
-func (chanceTile *ChanceTile) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *events.Bus) {
+func (chanceTile *ChanceTile) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *common.Bus) {
 
-	bus.Publish(events.GameEvent{
-		Type: events.LandedOnChance,
+	bus.Publish(common.GameEvent{
+		Type: common.LandedOnChance,
 		Payload: events.LandedOnChancePayload{
 			PlayerName: player.GetName(),
 			TileName:   chanceTile.GetName(),
 		},
 	})
+}
+
+func (chance *ChanceTile) BuyProperty(player *player.Player, bus *common.Bus) {
+
 }
 
 func NewChanceTile(position int, name string) common.Tile {

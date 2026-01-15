@@ -1,27 +1,8 @@
-package events
+package common
 
 import (
 	"fmt"
-	"sync"
 )
-
-// Type represents an event type (paid_rent, rolled_dice, etc.)
-type Type string
-
-// Event is the envelope passed through the bus
-type Event struct {
-	Type    Type
-	Payload any
-}
-
-// Listener is a function that reacts to an event
-type Listener func(GameEvent)
-
-// Bus is the central event dispatcher
-type Bus struct {
-	mu        sync.RWMutex
-	listeners map[EventType][]Listener
-}
 
 // NewBus creates and initializes a new event bus
 func NewBus() *Bus {

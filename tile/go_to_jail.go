@@ -1,17 +1,13 @@
 package tile
 
 import (
+	"fmt"
 	"monopoly/common"
-	"monopoly/events"
 	"monopoly/player"
 )
 
 type GoToJail struct {
 	BaseTile
-}
-
-func (jail *GoToJail) setPlayerToJail(player *player.Player) {
-
 }
 
 func NewGoToJailTile(name string, position int) common.Tile {
@@ -31,6 +27,17 @@ func (jail *GoToJail) GetPosition() int {
 	return jail.Position
 }
 
-func (jail *GoToJail) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *events.Bus) {
+func (jail *GoToJail) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *common.Bus) {
+	if !player.GetJailStatus() {
+		jailPos, ok := common.GetTilePosByName("Jail", tiles)
 
+		if ok {
+			player.Teleport(jailPos)
+			player.ToggleIsJailed()
+			player.IncrementJailedTurns()
+
+		} else {
+			fmt.Println("Jail Tile not found")
+		}
+	}
 }

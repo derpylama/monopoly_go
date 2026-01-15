@@ -2,6 +2,7 @@ package view
 
 import (
 	"fmt"
+	"monopoly/common"
 	"monopoly/events"
 	"monopoly/game"
 
@@ -25,7 +26,7 @@ import (
 
 // }
 
-func RegisterPromptListeners(commandChan chan<- game.GameCommand, bus *events.Bus) {
+func RegisterPromptListeners(commandChan chan<- game.GameCommand, bus *common.Bus) {
 	// bus.Subscribe(events.InputPromptRollDice, func(e events.GameEvent) {
 	// 	p := e.Payload.(events.PromptRollDicePayload)
 	// 	fmt.Printf("%s, type 'roll' to roll the dice: ", p.PlayerName)
@@ -41,28 +42,44 @@ func RegisterPromptListeners(commandChan chan<- game.GameCommand, bus *events.Bu
 }
 
 func RegisterReactiveGUIListeners(
-	bus *events.Bus,
+	bus *common.Bus,
 	g *game.Game,
 	commandChan chan<- game.GameCommand,
 	logArea *widget.Entry,
 	buttonContainer *fyne.Container,
 	playerLabel *widget.Label,
+	propertiesCon *fyne.Container,
 	mainWindow fyne.Window,
 ) {
 
 	//Update which player's turn it is and their money
-	bus.Subscribe(events.StartTurn, func(ge events.GameEvent) {
+	bus.Subscribe(common.StartTurn, func(ge common.GameEvent) {
 		payload := ge.Payload.(events.StartTurnPayload)
 
 		fyne.Do(func() {
 			playerLabel.SetText(
 				fmt.Sprintf("%s's turn:\n%s has $%d", payload.PlayerName, payload.PlayerName, payload.Money),
 			)
+
+			propertiesCon.Objects = nil
+			properties := payload.OwnedProperties
+
+			if len(properties) > 0 {
+				for _, property := range properties {
+
+					propBtn := widget.NewButton(property.GetName(), func() {
+
+					})
+
+					propertiesCon.Add(propBtn)
+				}
+			}
+			propertiesCon.Refresh()
 		})
 	})
 
 	//Update the players money after every time they spend it
-	bus.Subscribe(events.UpdateMoney, func(ge events.GameEvent) {
+	bus.Subscribe(common.UpdateMoney, func(ge common.GameEvent) {
 		payload := ge.Payload.(events.UpdateMoneyPayload)
 
 		fyne.Do(func() {
@@ -73,7 +90,7 @@ func RegisterReactiveGUIListeners(
 	})
 
 	// Show prompt options from the game
-	bus.Subscribe(events.InputPromptOptions, func(e events.GameEvent) {
+	bus.Subscribe(common.InputPromptOptions, func(e common.GameEvent) {
 		payload := e.Payload.(events.InputPromptPayload)
 
 		// Clear existing buttons
@@ -99,7 +116,7 @@ func RegisterReactiveGUIListeners(
 	})
 
 	// Logging events
-	bus.Subscribe(events.RolledDice, func(e events.GameEvent) {
+	bus.Subscribe(common.RolledDice, func(e common.GameEvent) {
 		fyne.Do(func() {
 			p := e.Payload.(events.RolledDicePayload)
 			logArea.SetText(logArea.Text + fmt.Sprintf(
@@ -109,7 +126,7 @@ func RegisterReactiveGUIListeners(
 		})
 	})
 
-	bus.Subscribe(events.LandedOnTile, func(e events.GameEvent) {
+	bus.Subscribe(common.LandedOnTile, func(e common.GameEvent) {
 		fyne.Do(func() {
 			p := e.Payload.(events.LandedOnTilePayload)
 			logArea.SetText(logArea.Text + fmt.Sprintf(
@@ -119,7 +136,7 @@ func RegisterReactiveGUIListeners(
 		})
 	})
 
-	bus.Subscribe(events.PaidRent, func(e events.GameEvent) {
+	bus.Subscribe(common.PaidRent, func(e common.GameEvent) {
 		fyne.Do(func() {
 			p := e.Payload.(events.PaidRentPayload)
 			logArea.SetText(logArea.Text + fmt.Sprintf(
@@ -130,7 +147,7 @@ func RegisterReactiveGUIListeners(
 		})
 	})
 
-	bus.Subscribe(events.PaidTax, func(e events.GameEvent) {
+	bus.Subscribe(common.PaidTax, func(e common.GameEvent) {
 		fyne.Do(func() {
 			p := e.Payload.(events.TaxPayload)
 			logArea.SetText(logArea.Text + fmt.Sprintf(
@@ -141,7 +158,7 @@ func RegisterReactiveGUIListeners(
 		})
 	})
 
-	bus.Subscribe(events.LandedOnUnownedProperty, func(ge events.GameEvent) {
+	bus.Subscribe(common.LandedOnUnownedProperty, func(ge common.GameEvent) {
 		fyne.Do(func() {
 			p := ge.Payload.(events.LandedOnUnownedPropertyPayload)
 			logArea.SetText(logArea.Text + fmt.Sprintf(
@@ -160,7 +177,7 @@ func RegisterReactiveGUIListeners(
 		})
 	})
 
-	bus.Subscribe(events.BoughtProperty, func(g events.GameEvent) {
+	bus.Subscribe(common.BoughtProperty, func(g common.GameEvent) {
 		fyne.Do(func() {
 			p := g.Payload.(events.BoughtPropertyPayload)
 
@@ -169,4 +186,5 @@ func RegisterReactiveGUIListeners(
 			))
 		})
 	})
+
 }

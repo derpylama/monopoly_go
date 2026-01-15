@@ -1,15 +1,16 @@
 package game
 
 import (
+	"monopoly/common"
 	"monopoly/events"
 )
 
 func (game *Game) RegisterListeners(commandChan chan<- GameCommand) {
 
-	game.bus.Subscribe(events.StartTurn, func(e events.GameEvent) {
+	game.bus.Subscribe(common.StartTurn, func(e common.GameEvent) {
 		p := e.Payload.(events.StartTurnPayload)
-		game.bus.Publish(events.GameEvent{
-			Type: events.InputPromptOptions,
+		game.bus.Publish(common.GameEvent{
+			Type: common.InputPromptOptions,
 			Payload: events.InputPromptPayload{
 				PlayerName: p.PlayerName,
 				Options:    []any{GameCommand{Type: CmdEndTurn, PlayerName: p.PlayerName}, GameCommand{Type: CmdRollDice, PlayerName: p.PlayerName}},
@@ -17,11 +18,11 @@ func (game *Game) RegisterListeners(commandChan chan<- GameCommand) {
 		})
 	})
 
-	game.bus.Subscribe(events.PaidTax, func(ge events.GameEvent) {
+	game.bus.Subscribe(common.PaidTax, func(ge common.GameEvent) {
 		p := ge.Payload.(events.TaxPayload)
 
-		game.bus.Publish(events.GameEvent{
-			Type: events.UpdateMoney,
+		game.bus.Publish(common.GameEvent{
+			Type: common.UpdateMoney,
 			Payload: events.UpdateMoneyPayload{
 				PlayerName: p.PlayerName,
 				Money:      p.PlayerMoney,
@@ -31,7 +32,7 @@ func (game *Game) RegisterListeners(commandChan chan<- GameCommand) {
 }
 
 func (game *Game) RegisterPromptListeners(commandChan chan<- GameCommand) {
-	game.bus.Subscribe(events.InputPromptRollDice, func(e events.GameEvent) {
+	game.bus.Subscribe(common.InputPromptRollDice, func(e common.GameEvent) {
 		p := e.Payload.(events.PromptRollDicePayload)
 
 		commandChan <- GameCommand{

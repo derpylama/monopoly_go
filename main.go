@@ -2,13 +2,15 @@ package main
 
 import (
 	"flag"
-	"monopoly/events"
+	"fmt"
+	"monopoly/common"
 	"monopoly/game"
 	"monopoly/logger"
 	"monopoly/view"
 )
 
 func main() {
+	ClearTerminal()
 	uiPtr := flag.String("ui", "console", "Type of UI to use: console or gui")
 	flag.Parse()
 
@@ -16,7 +18,7 @@ func main() {
 		panic("Invalid UI type. Use 'console' or 'gui'.")
 	}
 
-	bus := events.NewBus()
+	bus := common.NewBus()
 	commandChannel := make(chan game.GameCommand, 10)
 
 	g := game.NewGame(bus)
@@ -40,4 +42,8 @@ func main() {
 	}
 
 	view.StartGUI(&g, bus, commandChannel)
+}
+
+func ClearTerminal() {
+	fmt.Print("\033[H\033[2J")
 }

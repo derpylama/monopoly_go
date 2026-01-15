@@ -38,10 +38,10 @@ func (street *Street) GetPosition() int {
 	return street.Position
 }
 
-func (street *Street) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *events.Bus) {
+func (street *Street) OnLand(player *player.Player, tiles []common.Tile, dice []int, bus *common.Bus) {
 
-	bus.Publish(events.GameEvent{
-		Type: events.LandedOnStreet,
+	bus.Publish(common.GameEvent{
+		Type: common.LandedOnStreet,
 		Payload: events.LandedOnTilePayload{
 			PlayerName: player.GetName(),
 			TileName:   street.GetName(),
@@ -49,8 +49,8 @@ func (street *Street) OnLand(player *player.Player, tiles []common.Tile, dice []
 	})
 
 	if !street.IsOwned() {
-		bus.Publish(events.GameEvent{
-			Type: events.LandedOnUnownedProperty,
+		bus.Publish(common.GameEvent{
+			Type: common.LandedOnUnownedProperty,
 			Payload: events.LandedOnUnownedPropertyPayload{
 				PlayerName: player.GetName(),
 				TileName:   street.GetName(),
@@ -67,8 +67,8 @@ func (street *Street) OnLand(player *player.Player, tiles []common.Tile, dice []
 
 	player.PayRent(street.GetOwner(), rent)
 
-	bus.Publish(events.GameEvent{
-		Type: events.PaidRent,
+	bus.Publish(common.GameEvent{
+		Type: common.PaidRent,
 		Payload: events.PaidRentPayload{
 			PlayerName: player.GetName(),
 			TileName:   street.GetName(),
@@ -112,14 +112,14 @@ func (street *Street) GetColor() Color {
 	return street.color
 }
 
-func (street *Street) BuyProperty(player *player.Player, bus *events.Bus) {
+func (street *Street) BuyProperty(player *player.Player, bus *common.Bus) {
 	street.SetOwner(player)
 
 	if player.CanAfford(street.GetPrice()) {
 		player.Pay(street.GetPrice())
 
-		bus.Publish(events.GameEvent{
-			Type: events.BoughtProperty,
+		bus.Publish(common.GameEvent{
+			Type: common.BoughtProperty,
 			Payload: events.BoughtPropertyPayload{
 				PlayerName: player.GetName(),
 				TileName:   street.GetName(),
@@ -127,8 +127,8 @@ func (street *Street) BuyProperty(player *player.Player, bus *events.Bus) {
 			},
 		})
 	} else {
-		bus.Publish(events.GameEvent{
-			Type: events.CantAfford,
+		bus.Publish(common.GameEvent{
+			Type: common.CantAfford,
 			Payload: events.CantAffordPayload{
 				Playername: player.GetName(),
 				TileName:   street.GetName(),

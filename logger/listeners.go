@@ -2,19 +2,20 @@ package logger
 
 import (
 	"fmt"
+	"monopoly/common"
 	"monopoly/events"
 	"monopoly/game"
 	"strconv"
 )
 
-func RegisterListeners(bus *events.Bus, l *Logger) {
+func RegisterListeners(bus *common.Bus, l *Logger) {
 
-	bus.Subscribe(events.LandedOnFreeParking, func(e events.GameEvent) {
+	bus.Subscribe(common.LandedOnFreeParking, func(e common.GameEvent) {
 		p := e.Payload.(events.LandedOnFreeParkingPayload)
 		l.log("Player " + p.PlayerName + " landed on Free Parking")
 	})
 
-	bus.Subscribe(events.RolledDice, func(e events.GameEvent) {
+	bus.Subscribe(common.RolledDice, func(e common.GameEvent) {
 
 		p := e.Payload.(events.RolledDicePayload)
 		fmt.Println("DEBUG: RolledDice received")
@@ -24,7 +25,7 @@ func RegisterListeners(bus *events.Bus, l *Logger) {
 
 	})
 
-	bus.Subscribe(events.PaidRent, func(e events.GameEvent) {
+	bus.Subscribe(common.PaidRent, func(e common.GameEvent) {
 		p := e.Payload.(events.PaidRentPayload)
 		l.log(
 			p.PlayerName +
@@ -37,7 +38,7 @@ func RegisterListeners(bus *events.Bus, l *Logger) {
 		)
 	})
 
-	bus.Subscribe(events.PaidTax, func(e events.GameEvent) {
+	bus.Subscribe(common.PaidTax, func(e common.GameEvent) {
 		p := e.Payload.(events.TaxPayload)
 		l.log(
 			p.PlayerName +
@@ -57,12 +58,12 @@ func RegisterListeners(bus *events.Bus, l *Logger) {
 
 	// })
 
-	bus.Subscribe(events.StartTurn, func(e events.GameEvent) {
+	bus.Subscribe(common.StartTurn, func(e common.GameEvent) {
 		p := e.Payload.(events.StartTurnPayload)
 		l.log("It's now " + p.PlayerName + "'s turn!")
 	})
 }
 
-func RegisterPromptListeners(bus *events.Bus, commandChan chan<- game.GameCommand) {
+func RegisterPromptListeners(bus *common.Bus, commandChan chan<- game.GameCommand) {
 
 }
