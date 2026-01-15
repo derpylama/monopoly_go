@@ -87,6 +87,7 @@ func (game *Game) nextTurn() {
 	game.takeTurn()
 }
 
+// Returns a pointer to the current player object instance
 func (game *Game) getPlayer() *player.Player {
 	currentPlayerIndex := game.getCurrentPlayerIndex()
 	currentPlayer := game.players[currentPlayerIndex]
@@ -162,6 +163,9 @@ func (game *Game) Handle(cmd GameCommand) {
 		fmt.Println("player: " + player.GetName() + "bought " + cmd.TileName)
 		game.handleBuyProperty(player, cmd.TileName)
 
+	case CmdPayToExitJail:
+		game.handlePayToExitJail(player, cmd.TileName)
+
 	default:
 		println("Unknown command type:", string(cmd.Type))
 
@@ -171,39 +175,64 @@ func (game *Game) Handle(cmd GameCommand) {
 
 func (game *Game) handleRollDice(player *player.Player) {
 	roll := game.dice.ThrowDice()
-	player.Move(roll)
 
-	//pos, _ := common.GetTilePosByName("Jail", game.board.Tiles())
+	if !player.GetJailStatus() {
+		player.Move(roll)
 
-	//player.Teleport(pos)
+		game.bus.Publish(common.GameEvent{
+			Type: common.RolledDice,
+			Payload: events.RolledDicePayload{
+				PlayerName: player.GetName(),
+				Dice:       roll,
+			},
+		})
 
-	game.bus.Publish(common.GameEvent{
-		Type: common.RolledDice,
-		Payload: events.RolledDicePayload{
-			PlayerName: player.GetName(),
-			Dice:       roll,
-		},
-	})
+		landedOnTile := game.board.GetTile(player.GetPosition())
 
-	landedOnTile := game.board.GetTile(player.GetPosition())
+		game.bus.Publish(common.GameEvent{
+			Type: common.LandedOnTile,
+			Payload: events.LandedOnTilePayload{
+				PlayerName: player.GetName(),
+				TileName:   landedOnTile.GetName(),
+			},
+		})
 
-	game.bus.Publish(common.GameEvent{
-		Type: common.LandedOnTile,
-		Payload: events.LandedOnTilePayload{
-			PlayerName: player.GetName(),
-			TileName:   landedOnTile.GetName(),
-		},
-	})
+		landedOnTile.OnLand(player, game.board.Tiles(), roll, game.Bus())
 
-	landedOnTile.OnLand(player, game.board.Tiles(), roll, game.Bus())
+		game.bus.Publish(common.GameEvent{
+			Type: common.InputPromptOptions,
+			Payload: events.InputPromptPayload{
+				PlayerName: player.GetName(),
+				Options:    GetPlayerOptions(player, landedOnTile.GetName()),
+			},
+		})
+	} else {
+		if player.GetJailedTurns() < 3 && diceDubbleRollCheck(roll) {
 
-	game.bus.Publish(common.GameEvent{
-		Type: common.InputPromptOptions,
-		Payload: events.InputPromptPayload{
-			PlayerName: player.GetName(),
-			Options:    []any{GameCommand{Type: CmdEndTurn, PlayerName: player.GetName()}, GameCommand{Type: CmdRollDice, PlayerName: player.GetName()}},
-		},
-	})
+			player.ToggleIsJailed()
+			player.ResetJailedTurns()
+			player.Move(roll)
+
+		} else if player.GetJailedTurns() == 3 {
+			game.bus.Publish(common.GameEvent{
+				Type: common.ForcedPayToExitJail,
+				Payload: events.ForcedPayToExitJailPayload{
+					PlayerName: player.GetName(),
+					Price:      50,
+				},
+			})
+		} else {
+
+			game.bus.Publish(common.GameEvent{
+				Type: common.Jailed,
+				Payload: events.JailedPayload{
+					PlayerName:  player.GetName(),
+					JailedTurns: player.GetJailedTurns(),
+				},
+			})
+		}
+
+	}
 }
 
 func (game *Game) handleBuyProperty(player *player.Player, tileName string) {
@@ -225,10 +254,16 @@ func (game *Game) handleBuyProperty(player *player.Player, tileName string) {
 			Type: common.InputPromptOptions,
 			Payload: events.InputPromptPayload{
 				PlayerName: player.GetName(),
-				Options:    []any{GameCommand{Type: CmdEndTurn, PlayerName: player.GetName()}, GameCommand{Type: CmdRollDice, PlayerName: player.GetName()}},
+				Options:    []any{GetPlayerOptions(player, tileName)},
 			},
 		})
 	}
+}
+
+func (game *Game) handlePayToExitJail(player *player.Player, tileName string) {
+	player.Pay(50)
+	player.ToggleIsJailed()
+	player.ResetJailedTurns()
 }
 
 func (g *Game) Bus() *common.Bus {
@@ -252,6 +287,25 @@ func PlayerOwnsColorSet(player *player.Player, color tile.Color, board *board.Bo
 	return true
 }
 
-func GetPlayerOptions(player *player.Player) {
+func GetPlayerOptions(player *player.Player, tileName string) []any {
+	commandList := []any{}
 
+	if !player.HasRolled() {
+		commandList = append(commandList, GameCommand{Type: CmdRollDice, PlayerName: player.GetName(), TileName: tileName})
+	}
+
+	if player.GetJailStatus() {
+		commandList = append(commandList, GameCommand{Type: CmdPayToExitJail, PlayerName: player.GetName(), TileName: tileName})
+	}
+
+	commandList = append(commandList, GameCommand{Type: CmdEndTurn, PlayerName: player.GetName(), TileName: tileName})
+
+	return commandList
+}
+
+func diceDubbleRollCheck(dice []int) bool {
+	if dice[0] == dice[1] {
+		return true
+	}
+	return false
 }

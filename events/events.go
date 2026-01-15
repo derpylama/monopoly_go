@@ -24,6 +24,16 @@ type StartTurnPayload struct {
 	Color           string
 }
 
+type JailedPayload struct {
+	PlayerName  string
+	JailedTurns int
+}
+
+type ForcedPayToExitJailPayload struct {
+	PlayerName string
+	Price      int
+}
+
 type PromptRollDicePayload struct {
 	PlayerName string
 }

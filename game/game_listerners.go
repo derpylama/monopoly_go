@@ -29,6 +29,11 @@ func (game *Game) RegisterListeners(commandChan chan<- GameCommand) {
 			},
 		})
 	})
+
+	game.bus.Subscribe(common.Jailed, func(ge common.GameEvent) {
+		player := game.getPlayer()
+		player.IncrementJailedTurns()
+	})
 }
 
 func (game *Game) RegisterPromptListeners(commandChan chan<- GameCommand) {

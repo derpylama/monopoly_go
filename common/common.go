@@ -64,8 +64,10 @@ const (
 	InputPromptBuyProperty EventType = "prompt_buy_property"
 	InputPromptOptions     EventType = "prompt_options"
 
-	CantAfford  EventType = "cant_afford"
-	UpdateMoney EventType = "update_money"
+	CantAfford          EventType = "cant_afford"
+	UpdateMoney         EventType = "update_money"
+	Jailed              EventType = "jailed"
+	ForcedPayToExitJail EventType = "forced_pay_to_exit_jail"
 )
 
 type GameEvent struct {

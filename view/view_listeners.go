@@ -2,11 +2,14 @@ package view
 
 import (
 	"fmt"
+	"image/color"
 	"monopoly/common"
 	"monopoly/events"
 	"monopoly/game"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 )
@@ -67,14 +70,47 @@ func RegisterReactiveGUIListeners(
 			if len(properties) > 0 {
 				for _, property := range properties {
 
-					propBtn := widget.NewButton(property.GetName(), func() {
+					bg := canvas.NewRectangle(color.RGBA{255, 255, 255, 255})
+					bg.SetMinSize(fyne.NewSize(100, 100))
 
-					})
+					propLabel := widget.NewLabel(property.GetName())
 
-					propertiesCon.Add(propBtn)
+					container := container.NewStack(bg, propLabel)
+
+					propertiesCon.Add(container)
 				}
 			}
 			propertiesCon.Refresh()
+		})
+	})
+
+	bus.Subscribe(common.Jailed, func(ge common.GameEvent) {
+		payload := ge.Payload.(events.JailedPayload)
+
+		fyne.Do(func() {
+			playerLabel.SetText(
+				fmt.Sprintf(logArea.Text+"%s is in jail and has been for %d turns", payload.PlayerName, payload.JailedTurns),
+			)
+		})
+	})
+
+	bus.Subscribe(common.ForcedPayToExitJail, func(ge common.GameEvent) {
+		payload := ge.Payload.(events.ForcedPayToExitJailPayload)
+
+		fyne.Do(func() {
+			payToExitJailDialog := dialog.NewCustom(
+				"Notice",
+				"Pay",
+				widget.NewLabel(fmt.Sprintf("You have been in jail for three turns and need to pay $%d", payload.Price)),
+				mainWindow,
+			)
+
+			payToExitJailDialog.SetOnClosed(func() {
+				commandChan <- game.GameCommand{
+					Type:       game.CmdPayToExitJail,
+					PlayerName: payload.PlayerName,
+				}
+			})
 		})
 	})
 
