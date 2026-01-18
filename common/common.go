@@ -69,6 +69,8 @@ const (
 	Jailed              EventType = "jailed"
 	ForcedPayToExitJail EventType = "forced_pay_to_exit_jail"
 	UpdateProperties    EventType = "update_properties"
+	MortgageProperty    EventType = "mortgage_property"
+	UnMortgageProperty  EventType = "un_mortgage_property"
 )
 
 type GameEvent struct {

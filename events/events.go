@@ -129,3 +129,9 @@ type CantAffordPayload struct {
 	TileName   string
 	Price      int
 }
+
+type MortgagePropertyPayload struct {
+	PlayerName    string
+	TileName      string
+	MortgageValue int
+}

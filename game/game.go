@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"math"
 	"monopoly/board"
 	"monopoly/common"
 	"monopoly/dice"
@@ -151,6 +152,11 @@ func (game *Game) Handle(cmd GameCommand) {
 	case CmdPayToExitJail:
 		game.handlePayToExitJail(player, cmd.TileName)
 
+	case CmdMortgage:
+		game.handleMortgage(player, cmd.TileName)
+
+	case CmdUnMortgage:
+		game.handleMortgage(player, cmd.TileName)
 	default:
 		println("Unknown command type:", string(cmd.Type))
 
@@ -279,6 +285,72 @@ func (game *Game) handlePayToExitJail(player *player.Player, tileName string) {
 	player.Pay(50)
 	player.ToggleIsJailed()
 	player.ResetJailedTurns()
+}
+
+func (game *Game) handleMortgage(player *player.Player, tileName string) {
+	mortgegedTile, ok := game.board.GetTileByName(tileName)
+
+	if ok {
+		property := mortgegedTile.(tile.Property)
+
+		if !property.GetMortgageStatus() {
+			property.Mortgage()
+
+			game.bus.Publish(common.GameEvent{
+				Type: common.UpdateProperties,
+				Payload: events.UpdatePropertiesPayload{
+					PlayerName:      player.GetName(),
+					OwnedProperties: GetPlayersProperties(player, game.board.Tiles()),
+				},
+			})
+
+			game.bus.Publish(common.GameEvent{
+				Type: common.UpdateMoney,
+				Payload: events.UpdateMoneyPayload{
+					PlayerName: player.GetName(),
+					Money:      player.GetMoney(),
+				},
+			})
+
+			game.bus.Publish(common.GameEvent{
+				Type: common.MortgageProperty,
+				Payload: events.MortgagePropertyPayload{
+					PlayerName:    player.GetName(),
+					TileName:      property.GetName(),
+					MortgageValue: property.GetMortgageValue(),
+				},
+			})
+
+		} else {
+			property.UnMortgage()
+
+			game.bus.Publish(common.GameEvent{
+				Type: common.UpdateProperties,
+				Payload: events.UpdatePropertiesPayload{
+					PlayerName:      player.GetName(),
+					OwnedProperties: GetPlayersProperties(player, game.board.Tiles()),
+				},
+			})
+
+			game.bus.Publish(common.GameEvent{
+				Type: common.UpdateMoney,
+				Payload: events.UpdateMoneyPayload{
+					PlayerName: player.GetName(),
+					Money:      player.GetMoney(),
+				},
+			})
+
+			game.bus.Publish(common.GameEvent{
+				Type: common.MortgageProperty,
+				Payload: events.MortgagePropertyPayload{
+					PlayerName:    player.GetName(),
+					TileName:      property.GetName(),
+					MortgageValue: int(math.Round(float64(property.GetMortgageValue()) * float64(1.1))),
+				},
+			})
+		}
+
+	}
 }
 
 func (g *Game) Bus() *common.Bus {

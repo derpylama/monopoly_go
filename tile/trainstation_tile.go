@@ -1,6 +1,7 @@
 package tile
 
 import (
+	"math"
 	"monopoly/common"
 	"monopoly/events"
 	"monopoly/player"
@@ -65,6 +66,36 @@ func (trainStation *TrainStation) BuyProperty(player *player.Player, bus *common
 		})
 	}
 
+}
+
+func (trainStation *TrainStation) Mortgage() {
+
+	if !trainStation.isMortgage {
+		trainStation.isMortgage = true
+
+		owner := trainStation.GetOwner()
+		owner.SetMoney(owner.GetMoney() + trainStation.mortgageValue)
+	}
+
+}
+
+func (trainStation *TrainStation) UnMortgage() {
+
+	if trainStation.isMortgage {
+		trainStation.isMortgage = false
+
+		owner := trainStation.GetOwner()
+		owner.Pay(int(math.Round(float64(trainStation.mortgageValue) * float64(1.1))))
+	}
+
+}
+
+func (trainStation *TrainStation) GetMortgageStatus() bool {
+	return trainStation.isMortgage
+}
+
+func (trainStation *TrainStation) GetMortgageValue() int {
+	return trainStation.mortgageValue
 }
 
 func (trainStation *TrainStation) GetName() string {

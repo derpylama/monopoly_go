@@ -22,9 +22,8 @@ type Property interface {
 	SetOwner(*player.Player)
 	IsOwned() bool
 	BuyProperty(player *player.Player, bus *common.Bus)
-}
-
-func (tile *PropertyTile) Mortgage() int {
-	tile.isMortgage = true
-	return tile.mortgageValue
+	Mortgage()
+	UnMortgage()
+	GetMortgageStatus() bool
+	GetMortgageValue() int
 }

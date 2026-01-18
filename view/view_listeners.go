@@ -7,6 +7,7 @@ import (
 	"monopoly/events"
 	"monopoly/game"
 	"monopoly/tile"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -14,6 +15,16 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 )
+
+func appendLogText(logArea *widget.Entry, newText string, maxLines int) {
+	currentText := logArea.Text
+	lines := strings.Split(currentText, "\n")
+	if len(lines) >= maxLines {
+		lines = lines[len(lines)-maxLines+1:]
+	}
+	newFullText := strings.Join(lines, "\n") + newText
+	logArea.SetText(newFullText)
+}
 
 func RegisterPromptListeners(commandChan chan<- game.GameCommand, bus *common.Bus) {
 
@@ -39,32 +50,7 @@ func RegisterReactiveGUIListeners(
 				fmt.Sprintf("%s's turn:\n%s has $%d", payload.PlayerName, payload.PlayerName, payload.Money),
 			)
 
-			propertiesCon.Objects = nil
-			properties := payload.OwnedProperties
-
-			if len(properties) > 0 {
-				for _, property := range properties {
-
-					street, ok := property.(*tile.Street)
-
-					propLabel := widget.NewLabel(property.GetName())
-
-					if ok {
-
-						bg := canvas.NewRectangle(convertColorStringToRGB(street.GetColor()))
-						bg.SetMinSize(fyne.NewSize(100, 100))
-
-						con := container.NewStack(bg, propLabel)
-
-						propertiesCon.Add(con)
-					} else {
-						con := container.NewStack(propLabel)
-
-						propertiesCon.Add(con)
-					}
-
-				}
-			}
+			LoadOwnedProperties(propertiesCon, payload.OwnedProperties, commandChan)
 			propertiesCon.Refresh()
 		})
 	})
@@ -73,7 +59,7 @@ func RegisterReactiveGUIListeners(
 		payload := ge.Payload.(events.UpdatePropertiesPayload)
 
 		fyne.Do(func() {
-			LoadOwnedProperties(propertiesCon, payload.OwnedProperties)
+			LoadOwnedProperties(propertiesCon, payload.OwnedProperties, commandChan)
 		})
 	})
 
@@ -81,8 +67,10 @@ func RegisterReactiveGUIListeners(
 		payload := ge.Payload.(events.JailedPayload)
 
 		fyne.Do(func() {
-			playerLabel.SetText(
-				fmt.Sprintf(logArea.Text+"%s is in jail and has been for %d turns", payload.PlayerName, payload.JailedTurns),
+			appendLogText(logArea,
+				fmt.Sprintf("%s is in jail and has been for %d turns\n",
+					payload.PlayerName, payload.JailedTurns),
+				50,
 			)
 		})
 	})
@@ -104,6 +92,8 @@ func RegisterReactiveGUIListeners(
 					PlayerName: payload.PlayerName,
 				}
 			})
+
+			payToExitJailDialog.Show()
 		})
 	})
 
@@ -122,25 +112,27 @@ func RegisterReactiveGUIListeners(
 	bus.Subscribe(common.InputPromptOptions, func(e common.GameEvent) {
 		payload := e.Payload.(events.InputPromptPayload)
 
-		// Clear existing buttons
-		buttonContainer.Objects = nil
+		fyne.Do(func() {
+			// Clear existing buttons
+			buttonContainer.Objects = nil
 
-		// Create new buttons for each option
-		for _, opt := range payload.Options {
-			optionName := opt.(game.GameCommand) // capture loop variable
+			// Create new buttons for each option
+			for _, opt := range payload.Options {
+				optionName := opt.(game.GameCommand) // capture loop variable
 
-			btn := widget.NewButton(string(optionName.Type), func() {
-				fmt.Printf("Player %s chose %s\n", payload.PlayerName, optionName)
-				commandChan <- game.GameCommand{
-					Type:       game.CommandType(optionName.Type),
-					PlayerName: payload.PlayerName,
-				}
-			})
+				btn := widget.NewButton(string(optionName.Type), func() {
+					fmt.Printf("Player %s chose %s\n", payload.PlayerName, optionName)
+					commandChan <- game.GameCommand{
+						Type:       game.CommandType(optionName.Type),
+						PlayerName: payload.PlayerName,
+					}
+				})
 
-			buttonContainer.Add(btn)
-		}
+				buttonContainer.Add(btn)
+			}
 
-		fyne.Do(func() { buttonContainer.Refresh() })
+			buttonContainer.Refresh()
+		})
 
 	})
 
@@ -148,30 +140,30 @@ func RegisterReactiveGUIListeners(
 	bus.Subscribe(common.RolledDice, func(e common.GameEvent) {
 		fyne.Do(func() {
 			p := e.Payload.(events.RolledDicePayload)
-			logArea.SetText(logArea.Text + fmt.Sprintf(
+			appendLogText(logArea, fmt.Sprintf(
 				"%s rolled %d + %d = %d\n",
 				p.PlayerName, p.Dice[0], p.Dice[1], p.Dice[0]+p.Dice[1],
-			))
+			), 50)
 		})
 	})
 
 	bus.Subscribe(common.LandedOnTile, func(e common.GameEvent) {
 		fyne.Do(func() {
 			p := e.Payload.(events.LandedOnTilePayload)
-			logArea.SetText(logArea.Text + fmt.Sprintf(
+			appendLogText(logArea, fmt.Sprintf(
 				"%s landed on %s\n",
 				p.PlayerName, p.TileName,
-			))
+			), 50)
 		})
 	})
 
 	bus.Subscribe(common.PaidRent, func(e common.GameEvent) {
 		fyne.Do(func() {
 			p := e.Payload.(events.PaidRentPayload)
-			logArea.SetText(logArea.Text + fmt.Sprintf(
+			appendLogText(logArea, fmt.Sprintf(
 				"%s paid $%d rent to %s for %s\n",
 				p.PlayerName, p.Rent, p.Owner, p.TileName,
-			))
+			), 50)
 
 		})
 	})
@@ -179,10 +171,10 @@ func RegisterReactiveGUIListeners(
 	bus.Subscribe(common.PaidTax, func(e common.GameEvent) {
 		fyne.Do(func() {
 			p := e.Payload.(events.TaxPayload)
-			logArea.SetText(logArea.Text + fmt.Sprintf(
+			appendLogText(logArea, fmt.Sprintf(
 				"%s paid $%d tax at %s\n",
 				p.PlayerName, p.TaxAmount, p.TileName,
-			))
+			), 50)
 
 		})
 	})
@@ -190,10 +182,10 @@ func RegisterReactiveGUIListeners(
 	bus.Subscribe(common.LandedOnUnownedProperty, func(ge common.GameEvent) {
 		fyne.Do(func() {
 			p := ge.Payload.(events.LandedOnUnownedPropertyPayload)
-			logArea.SetText(logArea.Text + fmt.Sprintf(
+			appendLogText(logArea, fmt.Sprintf(
 				"%s landed on unowned property %s (cost: $%d)\n",
 				p.PlayerName, p.TileName, p.Price,
-			))
+			), 50)
 
 			dialog.ShowConfirm("Buy Property", fmt.Sprintf("%s, do you want to buy %s for $%d?", p.PlayerName, p.TileName, p.Price), func(b bool) {
 				if b {
@@ -206,13 +198,33 @@ func RegisterReactiveGUIListeners(
 		})
 	})
 
+	bus.Subscribe(common.MortgageProperty, func(ge common.GameEvent) {
+		fyne.Do(func() {
+			p := ge.Payload.(events.MortgagePropertyPayload)
+
+			appendLogText(logArea, fmt.Sprintf(
+				"%s mortgaged %s for %d\n", p.PlayerName, p.TileName, p.MortgageValue,
+			), 50)
+		})
+	})
+
+	bus.Subscribe(common.UnMortgageProperty, func(ge common.GameEvent) {
+		fyne.Do(func() {
+			p := ge.Payload.(events.MortgagePropertyPayload)
+
+			appendLogText(logArea, fmt.Sprintf(
+				"%s un morgtgage %s and paid %d\n", p.PlayerName, p.TileName, p.MortgageValue,
+			), 50)
+		})
+	})
+
 	bus.Subscribe(common.BoughtProperty, func(g common.GameEvent) {
 		fyne.Do(func() {
 			p := g.Payload.(events.BoughtPropertyPayload)
 
-			logArea.SetText(logArea.Text + fmt.Sprintf(
+			appendLogText(logArea, fmt.Sprintf(
 				"%s bought %s for $%d\n", p.PlayerName, p.TileName, p.Price,
-			))
+			), 50)
 		})
 	})
 
@@ -248,7 +260,7 @@ func convertColorStringToRGB(c tile.Color) color.RGBA {
 	return color.RGBA{}
 }
 
-func LoadOwnedProperties(propertiesCon *fyne.Container, ownedProperties []common.Tile) {
+func LoadOwnedProperties(propertiesCon *fyne.Container, ownedProperties []common.Tile, commandChan chan<- game.GameCommand) {
 	fyne.Do(func() {
 
 		propertiesCon.Objects = nil
@@ -256,25 +268,86 @@ func LoadOwnedProperties(propertiesCon *fyne.Container, ownedProperties []common
 		if len(ownedProperties) > 0 {
 			for _, property := range ownedProperties {
 
-				street, streetOk := property.(*tile.Street)
-
 				propLabel := widget.NewLabel(property.GetName())
 
-				if streetOk {
+				propertiesCon.Add(propLabel)
 
-					bg := canvas.NewRectangle(convertColorStringToRGB(street.GetColor()))
-					bg.SetMinSize(fyne.NewSize(100, 100))
+				switch property := property.(type) {
+				case *tile.Street:
 
-					mortgageBtn := widget.NewButton("Mortgage", func() {})
+					if property.GetMortgageStatus() {
+						mortgageBtn := widget.NewButton("UnMortgage", func() {
+							commandChan <- game.GameCommand{
+								Type:     game.CmdMortgage,
+								TileName: property.GetName(),
+							}
+						})
+
+						propertiesCon.Add(mortgageBtn)
+					} else {
+						mortgageBtn := widget.NewButton("Mortgage", func() {
+							commandChan <- game.GameCommand{
+								Type:     game.CmdMortgage,
+								TileName: property.GetName(),
+							}
+
+						})
+
+						propertiesCon.Add(mortgageBtn)
+					}
+
+					bg := canvas.NewRectangle(convertColorStringToRGB(property.GetColor()))
+					bg.SetMinSize(fyne.NewSize(120, 100))
+
 					houseBtn := widget.NewButton("Build house", func() {})
 
-					con := container.NewStack(bg, container.NewVBox(mortgageBtn, houseBtn))
+					con := container.NewStack(bg, container.NewVBox(houseBtn))
 
 					propertiesCon.Add(con)
-				} else {
-					con := container.NewStack(propLabel)
 
-					propertiesCon.Add(con)
+				case *tile.TrainStation:
+
+					if property.GetMortgageStatus() {
+						mortgageBtn := widget.NewButton("UnMortgage", func() {
+							commandChan <- game.GameCommand{
+								Type:     game.CmdMortgage,
+								TileName: property.GetName(),
+							}
+						})
+
+						propertiesCon.Add(mortgageBtn)
+					} else {
+						mortgageBtn := widget.NewButton("Mortgage", func() {
+							commandChan <- game.GameCommand{
+								Type:     game.CmdMortgage,
+								TileName: property.GetName(),
+							}
+						})
+
+						propertiesCon.Add(mortgageBtn)
+					}
+
+				case *tile.Utility:
+
+					if property.GetMortgageStatus() {
+						mortgageBtn := widget.NewButton("UnMortgage", func() {
+							commandChan <- game.GameCommand{
+								Type:     game.CmdMortgage,
+								TileName: property.GetName(),
+							}
+						})
+
+						propertiesCon.Add(mortgageBtn)
+					} else {
+						mortgageBtn := widget.NewButton("Mortgage", func() {
+							commandChan <- game.GameCommand{
+								Type:     game.CmdMortgage,
+								TileName: property.GetName(),
+							}
+						})
+
+						propertiesCon.Add(mortgageBtn)
+					}
 				}
 
 			}

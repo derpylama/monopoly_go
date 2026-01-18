@@ -115,6 +115,7 @@ func (player *Player) Move(rolledDice []int) {
 	}
 }
 
+// Removes money from current player and give it to the specified
 func (player *Player) PayRent(playerToPay *Player, amount int) {
 	if player.Pay(amount) {
 		playerToPay.SetMoney(playerToPay.GetMoney() + amount)
@@ -123,6 +124,7 @@ func (player *Player) PayRent(playerToPay *Player, amount int) {
 	}
 }
 
+// Removes money from the current player
 func (player *Player) Pay(cost int) bool {
 	if player.GetMoney() >= cost {
 		player.SetMoney(player.GetMoney() - cost)
@@ -132,6 +134,7 @@ func (player *Player) Pay(cost int) bool {
 	return false
 }
 
+// Instantly move the player to any position on the board. Dosen't pass go
 func (player *Player) Teleport(pos int) {
 
 	newPos := helper.Clamp(pos, 0, 39)

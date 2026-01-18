@@ -1,6 +1,7 @@
 package tile
 
 import (
+	"math"
 	"monopoly/common"
 	"monopoly/events"
 	"monopoly/helper"
@@ -159,6 +160,36 @@ func NewStreetTile(buyPrice int, housePrice int, priceIncreasePerHouse []int, co
 		hotelOwned:            false,
 		hotelRent:             hotelRent,
 	}
+}
+
+func (street *Street) Mortgage() {
+
+	if !street.isMortgage {
+		street.isMortgage = true
+
+		owner := street.GetOwner()
+		owner.SetMoney(owner.GetMoney() + street.mortgageValue)
+	}
+
+}
+
+func (street *Street) UnMortgage() {
+
+	if street.isMortgage {
+		street.isMortgage = false
+
+		owner := street.GetOwner()
+		owner.Pay(int(math.Round(float64(street.mortgageValue) * float64(1.1))))
+	}
+
+}
+
+func (street *Street) GetMortgageStatus() bool {
+	return street.isMortgage
+}
+
+func (street *Street) GetMortgageValue() int {
+	return street.mortgageValue
 }
 
 func (street *Street) setHouseAmount(amount int) {
