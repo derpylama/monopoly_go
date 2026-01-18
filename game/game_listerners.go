@@ -13,9 +13,13 @@ func (game *Game) RegisterListeners(commandChan chan<- GameCommand) {
 			Type: common.InputPromptOptions,
 			Payload: events.InputPromptPayload{
 				PlayerName: p.PlayerName,
-				Options:    []any{GameCommand{Type: CmdEndTurn, PlayerName: p.PlayerName}, GameCommand{Type: CmdRollDice, PlayerName: p.PlayerName}},
+				Options:    GetPlayerOptions(game.getPlayer(), p.TileName),
 			},
 		})
+
+		if game.getPlayer().HasRolled() {
+			game.getPlayer().ToggleHasRolled()
+		}
 	})
 
 	game.bus.Subscribe(common.PaidTax, func(ge common.GameEvent) {

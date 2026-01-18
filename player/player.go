@@ -104,7 +104,7 @@ func (player *Player) Move(rolledDice []int) {
 			diceTotal += dice
 		}
 
-		newPos := (diceTotal + curPos) % 40
+		newPos := (diceTotal + curPos) % 39
 
 		if newPos < curPos {
 			//Passed GO
@@ -112,7 +112,6 @@ func (player *Player) Move(rolledDice []int) {
 		}
 
 		player.position = newPos
-
 	}
 }
 
@@ -142,10 +141,12 @@ func (player *Player) Teleport(pos int) {
 
 func NewPlayer(money int, name string) *Player {
 	return &Player{
-		position:    0,
-		money:       money,
-		name:        name,
-		cardsInHand: []cards.Card{},
-		isJailed:    false,
+		position:        0,
+		money:           money,
+		name:            name,
+		cardsInHand:     []cards.Card{},
+		isJailed:        false,
+		hasRolled:       false,
+		amountOfDubbles: 0,
 	}
 }

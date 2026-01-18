@@ -6,6 +6,7 @@ import (
 	"monopoly/common"
 	"monopoly/events"
 	"monopoly/game"
+	"monopoly/tile"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -14,34 +15,8 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-// func RegisterListeners(commandChan chan<- game.GameCommand, bus *events.Bus) {
-
-// 	bus.Subscribe(events.StartTurn, func(e events.GameEvent) {
-// 		p := e.Payload.(events.StartTurnPayload)
-
-// 		bus.Publish(events.GameEvent{
-// 			Type: events.InputPromptRollDice,
-// 			Payload: events.PromptRollDicePayload{
-// 				PlayerName: p.PlayerName,
-// 			},
-// 		})
-// 	})
-
-// }
-
 func RegisterPromptListeners(commandChan chan<- game.GameCommand, bus *common.Bus) {
-	// bus.Subscribe(events.InputPromptRollDice, func(e events.GameEvent) {
-	// 	p := e.Payload.(events.PromptRollDicePayload)
-	// 	fmt.Printf("%s, type 'roll' to roll the dice: ", p.PlayerName)
-	// 	var input string
 
-	// 	if input == "roll" {
-	// 		commandChan <- game.GameCommand{
-	// 			Type:       game.CmdRollDice,
-	// 			PlayerName: p.PlayerName,
-	// 		}
-	// 	}
-	// })
 }
 
 func RegisterReactiveGUIListeners(
@@ -70,17 +45,35 @@ func RegisterReactiveGUIListeners(
 			if len(properties) > 0 {
 				for _, property := range properties {
 
-					bg := canvas.NewRectangle(color.RGBA{255, 255, 255, 255})
-					bg.SetMinSize(fyne.NewSize(100, 100))
+					street, ok := property.(*tile.Street)
 
 					propLabel := widget.NewLabel(property.GetName())
 
-					container := container.NewStack(bg, propLabel)
+					if ok {
 
-					propertiesCon.Add(container)
+						bg := canvas.NewRectangle(convertColorStringToRGB(street.GetColor()))
+						bg.SetMinSize(fyne.NewSize(100, 100))
+
+						con := container.NewStack(bg, propLabel)
+
+						propertiesCon.Add(con)
+					} else {
+						con := container.NewStack(propLabel)
+
+						propertiesCon.Add(con)
+					}
+
 				}
 			}
 			propertiesCon.Refresh()
+		})
+	})
+
+	bus.Subscribe(common.UpdateProperties, func(ge common.GameEvent) {
+		payload := ge.Payload.(events.UpdatePropertiesPayload)
+
+		fyne.Do(func() {
+			LoadOwnedProperties(propertiesCon, payload.OwnedProperties)
 		})
 	})
 
@@ -223,4 +216,69 @@ func RegisterReactiveGUIListeners(
 		})
 	})
 
+}
+
+func convertColorStringToRGB(c tile.Color) color.RGBA {
+	switch c {
+	case tile.Brown:
+		return color.RGBA{149, 84, 54, 255}
+
+	case tile.LightBlue:
+		return color.RGBA{170, 224, 252, 255}
+
+	case tile.Pink:
+		return color.RGBA{218, 57, 150, 255}
+
+	case tile.Orange:
+		return color.RGBA{247, 148, 29, 255}
+
+	case tile.Red:
+		return color.RGBA{237, 27, 36, 255}
+
+	case tile.Yellow:
+		return color.RGBA{254, 241, 2, 255}
+
+	case tile.Green:
+		return color.RGBA{31, 178, 90, 255}
+
+	case tile.DarkBlue:
+		return color.RGBA{1, 113, 187, 255}
+	}
+
+	return color.RGBA{}
+}
+
+func LoadOwnedProperties(propertiesCon *fyne.Container, ownedProperties []common.Tile) {
+	fyne.Do(func() {
+
+		propertiesCon.Objects = nil
+
+		if len(ownedProperties) > 0 {
+			for _, property := range ownedProperties {
+
+				street, streetOk := property.(*tile.Street)
+
+				propLabel := widget.NewLabel(property.GetName())
+
+				if streetOk {
+
+					bg := canvas.NewRectangle(convertColorStringToRGB(street.GetColor()))
+					bg.SetMinSize(fyne.NewSize(100, 100))
+
+					mortgageBtn := widget.NewButton("Mortgage", func() {})
+					houseBtn := widget.NewButton("Build house", func() {})
+
+					con := container.NewStack(bg, container.NewVBox(mortgageBtn, houseBtn))
+
+					propertiesCon.Add(con)
+				} else {
+					con := container.NewStack(propLabel)
+
+					propertiesCon.Add(con)
+				}
+
+			}
+		}
+		propertiesCon.Refresh()
+	})
 }

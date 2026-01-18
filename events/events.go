@@ -17,11 +17,16 @@ type UpdateMoneyPayload struct {
 	Money      int
 }
 
+type UpdatePropertiesPayload struct {
+	PlayerName      string
+	OwnedProperties []common.Tile
+}
+
 type StartTurnPayload struct {
 	PlayerName      string
 	Money           int
 	OwnedProperties []common.Tile
-	Color           string
+	TileName        string
 }
 
 type JailedPayload struct {

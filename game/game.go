@@ -40,13 +40,13 @@ func NewGame(bus *common.Bus) Game {
 }
 
 func (game *Game) StartGame() {
-	// game.takeTurn()
 	// Start the first turn by publishing StartTurn for player 0
 	game.bus.Publish(common.GameEvent{
 		Type: common.StartTurn,
 		Payload: events.StartTurnPayload{
 			PlayerName: game.players[game.currentPlayer].GetName(),
 			Money:      game.getPlayer().GetMoney(),
+			TileName:   "Go",
 		},
 	})
 
@@ -70,6 +70,7 @@ func (game *Game) takeTurn() {
 			PlayerName:      currentPlayer.GetName(),
 			Money:           currentPlayer.GetMoney(),
 			OwnedProperties: GetPlayersProperties(currentPlayer, game.board.Tiles()),
+			TileName:        game.board.GetTile(currentPlayer.GetPosition()).GetName(),
 		},
 	})
 
@@ -77,7 +78,7 @@ func (game *Game) takeTurn() {
 		Type: common.InputPromptOptions,
 		Payload: events.InputPromptPayload{
 			PlayerName: currentPlayer.GetName(),
-			Options:    []any{GameCommand{Type: CmdEndTurn, PlayerName: currentPlayer.GetName()}, GameCommand{Type: CmdRollDice, PlayerName: currentPlayer.GetName()}},
+			Options:    GetPlayerOptions(currentPlayer, "go"),
 		},
 	})
 }
@@ -97,22 +98,6 @@ func (game *Game) getPlayer() *player.Player {
 
 func (game *Game) getCurrentPlayerIndex() int {
 	return game.currentPlayer
-}
-
-func playerBuysProperty(player *player.Player, tile tile.Property) {
-	if player.Pay(tile.GetPrice()) {
-		tile.SetOwner(player)
-	} else {
-		fmt.Println("You can't afford this property")
-	}
-}
-
-func playerPaysRent(player *player.Player, amount int, owner *player.Player) {
-	if player.Pay(amount) {
-		owner.SetMoney(owner.GetMoney() + amount)
-	} else {
-		fmt.Println("You can't afford to pay the rent")
-	}
 }
 
 func ClearScreen() {
@@ -177,35 +162,56 @@ func (game *Game) handleRollDice(player *player.Player) {
 	roll := game.dice.ThrowDice()
 
 	if !player.GetJailStatus() {
-		player.Move(roll)
 
-		game.bus.Publish(common.GameEvent{
-			Type: common.RolledDice,
-			Payload: events.RolledDicePayload{
-				PlayerName: player.GetName(),
-				Dice:       roll,
-			},
-		})
+		if !player.HasRolled() {
 
-		landedOnTile := game.board.GetTile(player.GetPosition())
+			player.Move(roll)
 
-		game.bus.Publish(common.GameEvent{
-			Type: common.LandedOnTile,
-			Payload: events.LandedOnTilePayload{
-				PlayerName: player.GetName(),
-				TileName:   landedOnTile.GetName(),
-			},
-		})
+			game.bus.Publish(common.GameEvent{
+				Type: common.RolledDice,
+				Payload: events.RolledDicePayload{
+					PlayerName: player.GetName(),
+					Dice:       roll,
+				},
+			})
 
-		landedOnTile.OnLand(player, game.board.Tiles(), roll, game.Bus())
+			landedOnTile := game.board.GetTile(player.GetPosition())
 
-		game.bus.Publish(common.GameEvent{
-			Type: common.InputPromptOptions,
-			Payload: events.InputPromptPayload{
-				PlayerName: player.GetName(),
-				Options:    GetPlayerOptions(player, landedOnTile.GetName()),
-			},
-		})
+			game.bus.Publish(common.GameEvent{
+				Type: common.LandedOnTile,
+				Payload: events.LandedOnTilePayload{
+					PlayerName: player.GetName(),
+					TileName:   landedOnTile.GetName(),
+				},
+			})
+
+			landedOnTile.OnLand(player, game.board.Tiles(), roll, game.Bus())
+
+		}
+
+		if diceDubbleRollCheck(roll) && player.GetAmountOfDubbles() < 3 {
+			player.IncrementAmountOfDubbles()
+
+			game.bus.Publish(common.GameEvent{
+				Type: common.InputPromptOptions,
+				Payload: events.InputPromptPayload{
+					PlayerName: player.GetName(),
+					Options:    GetPlayerOptions(player, game.board.GetTile(game.getPlayer().GetPosition()).GetName()),
+				},
+			})
+			return
+		} else {
+			player.ToggleHasRolled()
+
+			game.bus.Publish(common.GameEvent{
+				Type: common.InputPromptOptions,
+				Payload: events.InputPromptPayload{
+					PlayerName: player.GetName(),
+					Options:    GetPlayerOptions(player, game.board.GetTile(game.getPlayer().GetPosition()).GetName()),
+				},
+			})
+		}
+
 	} else {
 		if player.GetJailedTurns() < 3 && diceDubbleRollCheck(roll) {
 
@@ -249,12 +255,21 @@ func (game *Game) handleBuyProperty(player *player.Player, tileName string) {
 				Money:      player.GetMoney(),
 			},
 		})
+
+		game.bus.Publish(common.GameEvent{
+			Type: common.UpdateProperties,
+			Payload: events.UpdatePropertiesPayload{
+				PlayerName:      player.GetName(),
+				OwnedProperties: GetPlayersProperties(player, game.board.Tiles()),
+			},
+		})
+
 	} else {
 		game.bus.Publish(common.GameEvent{
 			Type: common.InputPromptOptions,
 			Payload: events.InputPromptPayload{
 				PlayerName: player.GetName(),
-				Options:    []any{GetPlayerOptions(player, tileName)},
+				Options:    GetPlayerOptions(player, tileName),
 			},
 		})
 	}
@@ -304,8 +319,5 @@ func GetPlayerOptions(player *player.Player, tileName string) []any {
 }
 
 func diceDubbleRollCheck(dice []int) bool {
-	if dice[0] == dice[1] {
-		return true
-	}
-	return false
+	return dice[0] == dice[1]
 }

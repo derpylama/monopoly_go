@@ -30,7 +30,7 @@ type Street struct {
 	hotelRent             int
 }
 
-func (street *Street) GetName() string {
+func (street Street) GetName() string {
 	return street.Name
 }
 
