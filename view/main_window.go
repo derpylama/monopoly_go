@@ -43,6 +43,8 @@ func StartGUI(g *game.Game, bus *common.Bus, commandChan chan game.GameCommand) 
 	buttons := container.NewVBox()
 	propertiesCon := container.NewVBox()
 
+	scroll := container.NewVScroll(propertiesCon)
+
 	leftPanel := container.NewVBox(
 		playerLabel,
 		buttons,
@@ -51,11 +53,11 @@ func StartGUI(g *game.Game, bus *common.Bus, commandChan chan game.GameCommand) 
 
 	// Invisible sizing object
 	minSizer := canvas.NewRectangle(color.Transparent)
-	minSizer.SetMinSize(fyne.NewSize(300, 0)) // min width = 300px
+	minSizer.SetMinSize(fyne.NewSize(500, 0)) // min width = 300px
 
 	leftPanelWrapper := container.NewStack(minSizer, leftPanel)
 
-	windowGrid := container.New(layout.NewHBoxLayout(), leftPanelWrapper, propertiesCon, container.NewStack(monopolyBoard, houseCon), layout.NewSpacer())
+	windowGrid := container.New(layout.NewHBoxLayout(), leftPanelWrapper, scroll, container.NewStack(monopolyBoard, houseCon), layout.NewSpacer())
 
 	mainWindow.Resize(fyne.NewSize(1200, 800))
 	mainWindow.SetContent(windowGrid)

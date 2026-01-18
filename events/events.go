@@ -20,6 +20,7 @@ type UpdateMoneyPayload struct {
 type UpdatePropertiesPayload struct {
 	PlayerName      string
 	OwnedProperties []common.Tile
+	AllTiles        []common.Tile
 }
 
 type StartTurnPayload struct {
@@ -27,6 +28,26 @@ type StartTurnPayload struct {
 	Money           int
 	OwnedProperties []common.Tile
 	TileName        string
+	AllTiles        []common.Tile
+}
+
+type BuiltHousePayload struct {
+	PlayerName string
+	HousePrice int
+	NewRent    int
+	TileName   string
+}
+
+type BuiltHotelPayload struct {
+	PlayerName string
+	HotelPrice int
+	NewRent    int
+	TileName   string
+}
+
+type OwnMaxAmountOfHousesPayload struct {
+	TileName   string
+	PlayerName string
 }
 
 type JailedPayload struct {

@@ -50,7 +50,7 @@ func RegisterReactiveGUIListeners(
 				fmt.Sprintf("%s's turn:\n%s has $%d", payload.PlayerName, payload.PlayerName, payload.Money),
 			)
 
-			LoadOwnedProperties(propertiesCon, payload.OwnedProperties, commandChan)
+			LoadOwnedProperties(propertiesCon, payload.OwnedProperties, commandChan, payload.AllTiles)
 			propertiesCon.Refresh()
 		})
 	})
@@ -59,7 +59,7 @@ func RegisterReactiveGUIListeners(
 		payload := ge.Payload.(events.UpdatePropertiesPayload)
 
 		fyne.Do(func() {
-			LoadOwnedProperties(propertiesCon, payload.OwnedProperties, commandChan)
+			LoadOwnedProperties(propertiesCon, payload.OwnedProperties, commandChan, payload.AllTiles)
 		})
 	})
 
@@ -218,6 +218,37 @@ func RegisterReactiveGUIListeners(
 		})
 	})
 
+	bus.Subscribe(common.BuiltHouse, func(ge common.GameEvent) {
+		p := ge.Payload.(events.BuiltHousePayload)
+
+		fyne.Do(func() {
+			appendLogText(logArea, fmt.Sprintf(
+				"%s built a house on %s for $%d and now has $%d in rent\n", p.PlayerName, p.TileName, p.HousePrice, p.NewRent,
+			), 50)
+		})
+
+	})
+
+	bus.Subscribe(common.BuiltHotel, func(ge common.GameEvent) {
+		p := ge.Payload.(events.BuiltHotelPayload)
+
+		fyne.Do(func() {
+			appendLogText(logArea, fmt.Sprintf(
+				"%s built a Hotel on %s for $%d and now has $%d in rent\n", p.PlayerName, p.TileName, p.HotelPrice, p.NewRent,
+			), 50)
+		})
+	})
+
+	bus.Subscribe(common.OwnMaxAmountOfHouses, func(ge common.GameEvent) {
+		p := ge.Payload.(events.OwnMaxAmountOfHousesPayload)
+
+		fyne.Do(func() {
+			appendLogText(logArea, fmt.Sprintf(
+				"%s owns the max amount of houses on %s\n", p.PlayerName, p.TileName,
+			), 50)
+		})
+	})
+
 	bus.Subscribe(common.BoughtProperty, func(g common.GameEvent) {
 		fyne.Do(func() {
 			p := g.Payload.(events.BoughtPropertyPayload)
@@ -260,15 +291,16 @@ func convertColorStringToRGB(c tile.Color) color.RGBA {
 	return color.RGBA{}
 }
 
-func LoadOwnedProperties(propertiesCon *fyne.Container, ownedProperties []common.Tile, commandChan chan<- game.GameCommand) {
+func LoadOwnedProperties(propertiesCon *fyne.Container, ownedProperties []common.Tile, commandChan chan<- game.GameCommand, allTiles []common.Tile) {
 	fyne.Do(func() {
 
 		propertiesCon.Objects = nil
 
 		if len(ownedProperties) > 0 {
 			for _, property := range ownedProperties {
+				property := property.(tile.Property)
 
-				propLabel := widget.NewLabel(property.GetName())
+				propLabel := widget.NewLabel(fmt.Sprintf("%s Rent: $%d", property.GetName(), property.GetRent(allTiles, []int{0, 1})))
 
 				propertiesCon.Add(propLabel)
 
@@ -299,11 +331,27 @@ func LoadOwnedProperties(propertiesCon *fyne.Container, ownedProperties []common
 					bg := canvas.NewRectangle(convertColorStringToRGB(property.GetColor()))
 					bg.SetMinSize(fyne.NewSize(120, 100))
 
-					houseBtn := widget.NewButton("Build house", func() {})
+					if property.GetHouseAmount() < 3 {
+						houseBtn := widget.NewButton("Build house", func() {
+							commandChan <- game.GameCommand{
+								Type:     game.CmdBuildHouse,
+								TileName: property.GetName(),
+							}
+						})
 
-					con := container.NewStack(bg, container.NewVBox(houseBtn))
+						con := container.NewStack(bg, container.NewVBox(houseBtn))
+						propertiesCon.Add(con)
+					} else {
+						houseBtn := widget.NewButton("Build hotel", func() {
+							commandChan <- game.GameCommand{
+								Type:     game.CmdBuildHotel,
+								TileName: property.GetName(),
+							}
+						})
 
-					propertiesCon.Add(con)
+						con := container.NewStack(bg, container.NewVBox(houseBtn))
+						propertiesCon.Add(con)
+					}
 
 				case *tile.TrainStation:
 

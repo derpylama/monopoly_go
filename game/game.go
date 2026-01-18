@@ -48,6 +48,7 @@ func (game *Game) StartGame() {
 			PlayerName: game.players[game.currentPlayer].GetName(),
 			Money:      game.getPlayer().GetMoney(),
 			TileName:   "Go",
+			AllTiles:   game.board.Tiles(),
 		},
 	})
 
@@ -57,11 +58,7 @@ func (game *Game) EndGame() {
 
 }
 
-func (game *Game) AddPlayer() {
-	//Gets all required inputs and creates a new player
-
-}
-
+// Sends the event for the round to start
 func (game *Game) takeTurn() {
 	currentPlayer := game.getPlayer()
 
@@ -72,6 +69,7 @@ func (game *Game) takeTurn() {
 			Money:           currentPlayer.GetMoney(),
 			OwnedProperties: GetPlayersProperties(currentPlayer, game.board.Tiles()),
 			TileName:        game.board.GetTile(currentPlayer.GetPosition()).GetName(),
+			AllTiles:        game.board.Tiles(),
 		},
 	})
 
@@ -132,6 +130,7 @@ func GetPlayersProperties(player *player.Player, tiles []common.Tile) []common.T
 	return properties
 }
 
+// Runs in a seperate proccess and checks what commands that are sent to the command channel and calls the correct function
 func (game *Game) Handle(cmd GameCommand) {
 	player := game.getPlayer()
 
@@ -157,6 +156,12 @@ func (game *Game) Handle(cmd GameCommand) {
 
 	case CmdUnMortgage:
 		game.handleMortgage(player, cmd.TileName)
+
+	case CmdBuildHouse:
+		game.handleBuildHouse(player, cmd.TileName)
+
+	case CmdBuildHotel:
+		game.handleBuildHotel(player, cmd.TileName)
 	default:
 		println("Unknown command type:", string(cmd.Type))
 
@@ -301,6 +306,7 @@ func (game *Game) handleMortgage(player *player.Player, tileName string) {
 				Payload: events.UpdatePropertiesPayload{
 					PlayerName:      player.GetName(),
 					OwnedProperties: GetPlayersProperties(player, game.board.Tiles()),
+					AllTiles:        game.board.Tiles(),
 				},
 			})
 
@@ -329,6 +335,7 @@ func (game *Game) handleMortgage(player *player.Player, tileName string) {
 				Payload: events.UpdatePropertiesPayload{
 					PlayerName:      player.GetName(),
 					OwnedProperties: GetPlayersProperties(player, game.board.Tiles()),
+					AllTiles:        game.board.Tiles(),
 				},
 			})
 
@@ -346,6 +353,109 @@ func (game *Game) handleMortgage(player *player.Player, tileName string) {
 					PlayerName:    player.GetName(),
 					TileName:      property.GetName(),
 					MortgageValue: int(math.Round(float64(property.GetMortgageValue()) * float64(1.1))),
+				},
+			})
+		}
+
+	}
+}
+
+func (game *Game) handleBuildHouse(player *player.Player, tileName string) {
+	property, ok := game.board.GetTileByName(tileName)
+
+	if ok {
+		street := property.(*tile.Street)
+		housePrice := street.GetHousePrice()
+
+		if street.GetHouseAmount() < 3 {
+			if player.CanAfford(housePrice) {
+				street.BuyHouse()
+				player.Pay(housePrice)
+
+				game.bus.Publish(common.GameEvent{
+					Type: common.BuiltHouse,
+					Payload: events.BuiltHousePayload{
+						PlayerName: player.GetName(),
+						HousePrice: housePrice,
+						NewRent:    street.GetRent(game.board.Tiles(), []int{1, 1}),
+						TileName:   street.GetName(),
+					},
+				})
+
+				game.bus.Publish(common.GameEvent{
+					Type: common.UpdateMoney,
+					Payload: events.UpdateMoneyPayload{
+						PlayerName: player.GetName(),
+						Money:      player.GetMoney(),
+					},
+				})
+			} else {
+				game.bus.Publish(common.GameEvent{
+					Type: common.CantAfford,
+					Payload: events.CantAffordPayload{
+						Playername: player.GetName(),
+						TileName:   street.GetName(),
+						Price:      housePrice,
+					},
+				})
+			}
+		} else {
+			game.bus.Publish(common.GameEvent{
+				Type: common.OwnMaxAmountOfHouses,
+				Payload: events.OwnMaxAmountOfHousesPayload{
+					PlayerName: player.GetName(),
+					TileName:   street.GetName(),
+				},
+			})
+
+			game.bus.Publish(common.GameEvent{
+				Type: common.InputPromptOptions,
+				Payload: events.InputPromptPayload{
+					PlayerName: player.GetName(),
+					Options:    GetPlayerOptions(player, property.GetName()),
+				},
+			})
+		}
+
+	}
+}
+
+func (game *Game) handleBuildHotel(player *player.Player, tileName string) {
+	property, ok := game.board.GetTileByName(tileName)
+
+	if ok {
+		street := property.(*tile.Street)
+
+		if street.GetHouseAmount() == 4 {
+			if player.CanAfford(street.GetHousePrice()) {
+				street.BuyHotel()
+				player.Pay(street.GetHousePrice())
+
+				game.bus.Publish(common.GameEvent{
+					Type: common.BuiltHotel,
+					Payload: events.BuiltHotelPayload{
+						PlayerName: player.GetName(),
+						HotelPrice: street.GetHousePrice(),
+						NewRent:    street.GetRent(game.board.Tiles(), []int{1, 1}),
+						TileName:   street.GetName(),
+					},
+				})
+
+				game.bus.Publish(common.GameEvent{
+					Type: common.UpdateMoney,
+					Payload: events.UpdateMoneyPayload{
+						PlayerName: player.GetName(),
+						Money:      player.GetMoney(),
+					},
+				})
+			}
+		} else {
+			game.bus.Publish(common.GameEvent{
+				Type: common.CantAfford,
+				Payload: events.CantAffordPayload{
+					Playername: player.GetName(),
+					TileName:   street.GetName(),
+					Price:      street.GetHousePrice(),
 				},
 			})
 		}

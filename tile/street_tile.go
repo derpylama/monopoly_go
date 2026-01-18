@@ -208,7 +208,10 @@ func (street *Street) BuyHouse() {
 	var curHouseAmount = street.GetHouseAmount()
 	var newHouseAmount = curHouseAmount + 1
 
-	street.setHouseAmount(newHouseAmount)
+	if street.GetHouseAmount() < 3 {
+		street.setHouseAmount(newHouseAmount)
+	}
+
 }
 
 func (street *Street) SellHouse() {

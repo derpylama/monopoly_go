@@ -25,6 +25,7 @@ func main() {
 
 	g.RegisterListeners(commandChannel)
 	g.RegisterPromptListeners(commandChannel)
+
 	if *uiPtr == "console" {
 		log := logger.New(true)
 

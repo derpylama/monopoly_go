@@ -37,7 +37,8 @@ const (
 	PaidRent                EventType = "paid_rent"
 	BoughtProperty          EventType = "bought_property"
 	DeclinedBuy             EventType = "declined_buy"
-	BoughtHouse             EventType = "bought_house"
+	BuiltHouse              EventType = "built_house"
+	BuiltHotel              EventType = "built_hotel"
 	LandedOnGo              EventType = "landed_on_go"
 	PaidTax                 EventType = "paid_tax"
 	LandedOnTile            EventType = "landed_on_tile"
@@ -54,8 +55,6 @@ const (
 
 	InputBuyProperty       EventType = "buy_property"
 	InputDeclineBuy        EventType = "decline_buy"
-	InputBuyHouse          EventType = "buy_house"
-	InputDeclineBuyHouse   EventType = "decline_buy_house"
 	InputRollDice          EventType = "roll_dice"
 	InputEndTurn           EventType = "end_turn"
 	InputPromptNewPlayer   EventType = "prompt_new_player"
@@ -64,13 +63,14 @@ const (
 	InputPromptBuyProperty EventType = "prompt_buy_property"
 	InputPromptOptions     EventType = "prompt_options"
 
-	CantAfford          EventType = "cant_afford"
-	UpdateMoney         EventType = "update_money"
-	Jailed              EventType = "jailed"
-	ForcedPayToExitJail EventType = "forced_pay_to_exit_jail"
-	UpdateProperties    EventType = "update_properties"
-	MortgageProperty    EventType = "mortgage_property"
-	UnMortgageProperty  EventType = "un_mortgage_property"
+	CantAfford           EventType = "cant_afford"
+	UpdateMoney          EventType = "update_money"
+	Jailed               EventType = "jailed"
+	ForcedPayToExitJail  EventType = "forced_pay_to_exit_jail"
+	UpdateProperties     EventType = "update_properties"
+	MortgageProperty     EventType = "mortgage_property"
+	UnMortgageProperty   EventType = "un_mortgage_property"
+	OwnMaxAmountOfHouses EventType = "own_max_amount_of_houses"
 )
 
 type GameEvent struct {
